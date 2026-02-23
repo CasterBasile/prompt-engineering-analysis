@@ -1,0 +1,24 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Python files
+*.py text eol=lf
+*.pyw text eol=lf
+
+# Config files
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Excel files
+*.xlsx binary
+*.xls binary
+
+# LaTeX files
+*.tex text eol=lf
+*.bib text eol=lf
+
+# Scripts
+*.bat text eol=crlf
+*.sh text eol=lf

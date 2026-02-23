@@ -1,0 +1,438 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Analisi Prompt Engineering
+% Documento Professionale con Stile Colorato
+% Versione Semplificata - Solo Pacchetti Standard
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[10pt,twocolumn]{article}
+
+%----------------------------------------------------------------------------------------
+%	PACCHETTI
+%----------------------------------------------------------------------------------------
+
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{abstract}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+%----------------------------------------------------------------------------------------
+%	COLORI
+%----------------------------------------------------------------------------------------
+
+\definecolor{primarycolor}{RGB}{0,51,102}      % Blu navy
+\definecolor{secondarycolor}{RGB}{0,102,204}   % Blu chiaro
+\definecolor{accentcolor}{RGB}{220,50,47}      % Rosso accento
+\definecolor{darkgray}{RGB}{64,64,64}          % Grigio scuro
+
+%----------------------------------------------------------------------------------------
+%	FORMATTAZIONE TITOLI
+%----------------------------------------------------------------------------------------
+
+\titleformat{\section}
+  {\color{primarycolor}\Large\bfseries}
+  {\thesection}{1em}{}
+  
+\titleformat{\subsection}
+  {\color{secondarycolor}\large\bfseries}
+  {\thesubsection}{1em}{}
+  
+\titleformat{\subsubsection}
+  {\color{darkgray}\normalsize\bfseries}
+  {\thesubsubsection}{1em}{}
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT COLORATO
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\abstractnamefont}{\normalfont\Large\bfseries\color{primarycolor}}
+\renewcommand{\abstracttextfont}{\normalfont\small}
+
+%----------------------------------------------------------------------------------------
+%	HYPERLINK
+%----------------------------------------------------------------------------------------
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=secondarycolor,
+    filecolor=secondarycolor,
+    citecolor=primarycolor,
+    urlcolor=secondarycolor,
+    pdftitle={Analisi Prompt Engineering},
+    pdfauthor={Castrese Basile}
+}
+
+%----------------------------------------------------------------------------------------
+%	HEADER E FOOTER
+%----------------------------------------------------------------------------------------
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}Analisi Tecniche Prompt Engineering}
+\fancyhead[R]{\small\color{darkgray}Università di Napoli Federico II - A.A. 2025/2026}
+\fancyfoot[C]{\small\color{darkgray}\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{secondarycolor}\leaders\hrule height \headrulewidth\hfill}}
+
+%----------------------------------------------------------------------------------------
+%	INFORMAZIONI DOCUMENTO
+%----------------------------------------------------------------------------------------
+
+\title{
+    \vspace{-1cm}
+    {\color{primarycolor}\Huge\bfseries Analisi e Classificazione Automatica\\[0.3cm]
+    delle Tecniche di Prompt Engineering\\[0.2cm]
+    per Unit Testing con LLM}
+    \vspace{0.5cm}
+}
+
+\author{
+    \large\textbf{Castrese Basile}\\[0.2cm]
+    \normalsize Dipartimento di Ingegneria Elettrica e delle Tecnologie dell'Informazione\\
+    \normalsize Università degli Studi di Napoli Federico II\\
+    \normalsize Napoli, Italia\\[0.2cm]
+    \normalsize\href{mailto:b.castrese@studenti.unisa.it}{b.castrese@studenti.unisa.it}
+}
+
+\date{\normalsize Progetto Software Testing - Prof. Porfirio Tramontana\\[0.1cm]A.A. 2025/2026\\[0.2cm]\today}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\twocolumn[
+  \begin{@twocolumnfalse}
+    \maketitle
+    
+    \begin{abstract}
+    \noindent L'efficacia dei Large Language Models (LLM) nella generazione di codice dipende criticamente dalla qualità e dalla tecnica dei prompt utilizzati. Questo studio analizza \textbf{225 prompt} sviluppati da 75 studenti per generare unit test su tre applicazioni Java, con l'obiettivo di validare le classificazioni fornite dagli studenti e analizzare la distribuzione delle tecniche utilizzate. È stato sviluppato un \textbf{tool web-based in Python (Streamlit)} che classifica automaticamente i prompt utilizzando oltre 150 pattern regex organizzati gerarchicamente in una tassonomia di \textbf{18 tecniche} (Base, Reasoning Enhancement, Code Generation, Metacognizione). Un campione strategico di \textbf{40 prompt (17.8\%)} è stato selezionato per validazione manuale, bilanciato tra casi dubbi (confidence < 70\%), discordanze studente-algoritmo e concordanze. I risultati forniscono insights sulla diffusione delle tecniche avanzate di prompting e sull'accuratezza delle auto-classificazioni studentesche.
+    \end{abstract}
+    
+    \vspace{0.3cm}
+    \noindent\textbf{\color{primarycolor}Keywords:} Prompt Engineering, Large Language Models, Unit Testing, Classificazione Automatica, Pattern Matching, Chain-of-Thought
+    
+    \vspace{0.5cm}
+  \end{@twocolumnfalse}
+]
+
+%----------------------------------------------------------------------------------------
+%	CONTENUTO
+%----------------------------------------------------------------------------------------
+
+\section{Introduzione}
+
+L'utilizzo dei Large Language Models (LLM) per la generazione automatica di codice e test unitari rappresenta una delle applicazioni più promettenti dell'intelligenza artificiale generativa nel campo dello sviluppo software. La qualità degli output prodotti dagli LLM dipende criticamente dalla formulazione dei \textit{prompt}, ovvero dalle istruzioni fornite al modello \cite{wei2022chain,kojima2022large}.
+
+Durante un'esercitazione didattica sull'uso di LLM per Unit Testing, \textbf{75 studenti} hanno sviluppato prompt per generare test unitari per tre applicazioni Java:
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item \textbf{TennisScoreManager}: Sistema di gestione punteggio tennis con regole complesse
+    \item \textbf{SubjectParser}: Parser per codici materie universitarie
+    \item \textbf{HSLColor}: Convertitore colori da spazio HSL a RGB
+\end{itemize}
+
+Ogni studente ha fornito una propria classificazione della tecnica di prompting utilizzata, spesso basata su categorie comuni quali \textit{Zero-Shot Learning}, \textit{Few-Shot Learning} e \textit{Chain-of-Thought}.
+
+Tuttavia, le classificazioni fornite dagli studenti risultano frequentemente incomplete o imprecise, non considerando tassonomie più articolate che distinguono tra tecniche avanzate come \textit{Tree-of-Thought} \cite{yao2023tree}, \textit{Program-of-Thought} \cite{chen2022program}, \textit{Self-Refine}, e altri approcci sofisticati.
+
+\subsection{Obiettivi dello Studio}
+
+Il presente studio si pone due obiettivi principali:
+
+\begin{enumerate}[noitemsep,leftmargin=*]
+    \item \textbf{Validare le classificazioni}: Verificare la correttezza e completezza delle classificazioni fornite dagli studenti, utilizzando una tassonomia completa di 18 tecniche organizzate gerarchicamente
+    \item \textbf{Analisi statistica}: Produrre statistiche sulla varietà di prompt proposti e sulla frequenza di utilizzo delle diverse tecniche
+\end{enumerate}
+
+Il dataset comprende \textbf{225 prompt totali} (75 studenti × 3 applicazioni) con informazioni sul testo completo, l'LLM utilizzato e la classificazione proposta.
+
+%------------------------------------------------
+
+\section{Metodologia}
+
+\subsection{Tool Sviluppato}
+
+Per automatizzare l'analisi è stata sviluppata una \textbf{web application in Python} utilizzando il framework \textit{Streamlit}. Il tool integra:
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item \textbf{Pandas}: Data processing e elaborazione Excel
+    \item \textbf{Plotly}: Visualizzazioni interattive
+    \item \textbf{Regex}: Classificazione automatica (150+ pattern)
+    \item \textbf{Interfaccia Web}: Validazione manuale interattiva
+\end{itemize}
+
+\subsection{Workflow Operativo}
+
+Il processo si articola in \textbf{quattro fasi}:
+
+\subsubsection{Fase 1: Caricamento Dati}
+
+Il tool carica il file Excel da Google Forms ed estrae: testo prompt, LLM utilizzato con normalizzazione (Gemini/gemini/gemin → Gemini), classificazione studente.
+
+\subsubsection{Fase 2: Classificazione Automatica}
+
+L'algoritmo analizza ogni prompt usando pattern regex gerarchici in 4 categorie (Tabella \ref{tab:taxonomy}). La classificazione segue priorità: \textbf{Metacognizione} $>$ \textbf{Code Generation} $>$ \textbf{Reasoning} $>$ \textbf{Base}.
+
+Per ogni prompt si calcola:
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item \textbf{Confidence Score} (0-100\%)
+    \item \textbf{Is\_Doubtful}: True se confidence < 70\%
+    \item \textbf{Needs\_Correction}: True se studente ≠ algoritmo
+\end{itemize}
+
+\begin{table}[htbp]
+\caption{Tassonomia delle tecniche riconosciute}
+\label{tab:taxonomy}
+\centering
+\small
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Categoria} & \textbf{Tecnica} & \textbf{Punti} \\
+\midrule
+\multirow{2}{*}{Base} & Zero-Shot & +1 \\
+ & Few-Shot & +1 \\
+\midrule
+Reasoning & CoT / Auto-CoT / L2M & +2 \\
+Enhancement & ToT / GoT & +2 \\
+ & Self-Consistency / S2A & +2 \\
+\midrule
+Code & PoT / CoC / Scratchpad & +2 \\
+Generation & Scratchpad CoT & +1 \\
+\midrule
+Metacogn. & Self-Refine / Fix & +2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Fase 3: Campione Validazione}
+
+Selezione strategica di \textbf{40 prompt (17.8\%)} distribuiti come in Tabella \ref{tab:sample}.
+
+\begin{table}[htbp]
+\caption{Composizione campione validazione}
+\label{tab:sample}
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Tipo} & \textbf{N} & \textbf{Motivazione} \\
+\midrule
+Dubbi & 10 & Confidence < 70\% \\
+Con Correz. & 15 & S ≠ A \\
+Senza Corr. & 15 & S = A \\
+\midrule
+\textbf{Totale} & \textbf{40} & Bilanciato \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Razionale}: Campione statisticamente significativo (~18\%) ma gestibile per validazione accurata.
+
+\subsubsection{Fase 4: Validazione Manuale}
+
+Interfaccia web per compilare: \textit{Manual\_Validation}, \textit{Agreement} (Studente/Algoritmo/Altro), \textit{Manual\_Notes}.
+
+%------------------------------------------------
+
+\section{Risultati}
+
+\subsection{Statistiche Descrittive}
+
+\textit{[Da compilare dopo analisi file Prompt.xlsx]}
+
+Parametri chiave preliminari:
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item Totale prompt: \textbf{225}
+    \item Correzioni necessarie: \textbf{[VALORE]} (\%)
+    \item Casi dubbi: \textbf{[VALORE]} (\%)
+    \item Confidence media: \textbf{[VALORE]}\%
+    \item Tecniche rilevate: \textbf{[N]}/18
+    \item LLM: Gemini [N]\%, ChatGPT [N]\%
+\end{itemize}
+
+\subsection{Distribuzione Tecniche}
+
+\textit{[Da completare con foglio "Technique\_Distribution"]}
+
+I risultati preliminari suggeriscono predominanza di \textbf{tecniche base} (Few-Shot, Zero-Shot) rispetto ad approcci sofisticati (ToT, PoT).
+
+%\begin{figure}[htbp]
+%\centering
+%\includegraphics[width=\linewidth]{figures/technique_distribution}
+%\caption{Distribuzione tecniche di prompting}
+%\label{fig:techniques}
+%\end{figure}
+
+\subsection{Validazione Manuale}
+
+\textit{[Da completare dopo validazione 40 prompt]}
+
+Dei 40 prompt validati:
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item Accuratezza Algoritmo: [N]/40 ([X]\%)
+    \item Accuratezza Studenti: [N]/40 ([X]\%)
+    \item Accordo S-A: [X]\%
+\end{itemize}
+
+Metriche (Precisione, Recall, F1) calcolate da colonna Agreement.
+
+%------------------------------------------------
+
+\section{Discussione}
+
+\subsection{Casi Dubbi Significativi}
+
+L'analisi rivela pattern di ambiguità ricorrenti. Esempio: prompt con esempi minimali classificati Zero-Shot dagli studenti ma Few-Shot dall'algoritmo.
+
+\paragraph{Caso Esempio}
+Prompt: \textit{"Create method to parse codes. Example: CS101 → Dept: CS, Code: 101"}
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item Studente: \textbf{Zero-Shot}
+    \item Algoritmo: \textbf{Few-Shot} (72\% conf.)
+    \item Validazione: \textbf{Few-Shot} ✓
+\end{itemize}
+
+Motivazione: Presenza esempio esplicito Input→Output configura apprendimento per analogia.
+
+\subsection{Limitazioni}
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item \textbf{Regex}: Non cattura sfumature semantiche complesse
+    \item \textbf{Multi-tecnica}: Alcune prompt hanno caratteristiche multiple
+    \item \textbf{Campione}: 17.8\% validato manualmente
+    \item \textbf{Dominio}: Specifico per unit testing
+\end{itemize}
+
+\subsection{Implicazioni Pedagogiche}
+
+Gli studenti tendono a \textbf{sottovalutare la complessità} delle tecniche usate. Gap evidenziato:
+
+\begin{enumerate}[noitemsep,leftmargin=*]
+    \item Formazione su tassonomie avanzate
+    \item Esempi che distinguono tecniche
+    \item Esercitazioni guidate di identificazione
+\end{enumerate}
+
+%------------------------------------------------
+
+\section{Conclusioni}
+
+Studio sistematico di 225 prompt con tool automatico e validazione campionaria.
+
+\subsection{Risultati Principali}
+
+\textit{[Completare dopo analisi]}
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item Tecnica più usata: \textbf{[NOME]} ([X]\%)
+    \item Accordo S-A: \textbf{[X]\%}
+    \item Accuratezza algoritmo: \textbf{[X]\%}
+    \item Varietà: \textbf{[N]}/18 tecniche
+\end{itemize}
+
+\subsection{Contributi}
+
+Il tool è efficace per:
+
+\begin{enumerate}[noitemsep,leftmargin=*]
+    \item Classificazione rapida grandi volumi
+    \item Identificazione automatica casi dubbi
+    \item Interfaccia intuitiva validazione
+    \item Export strutturato Excel 7-fogli
+\end{enumerate}
+
+\subsection{Lavori Futuri}
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item ML-based classification (BERT, Sentence-BERT)
+    \item Classificazione multi-label per prompt ibridi
+    \item Validazione estesa 30-40\% dataset
+    \item Inter-rater reliability multipli annotatori
+\end{itemize}
+
+%------------------------------------------------
+
+\section{Materiali e Metodi}
+
+\subsection{Dataset e Preprocessing}
+
+Dataset da Google Forms: 75 studenti × 3 prompt = 225 totali. File Excel processato con \textit{pandas} per estrarre testo, LLM (normalizzato), classificazione studente.
+
+Normalizzazione gestisce: case-sensitivity, versioni (Gemini Pro 3 → Gemini), typos (gemin → Gemini), placeholder ("Which LLM?" → Non Specificato).
+
+\subsection{Algoritmo Classificazione}
+
+Pattern matching gerarchico a 4 livelli:
+
+\begin{enumerate}[noitemsep,leftmargin=*]
+    \item \textbf{Metacognizione}: \textit{refine, improve, iterate, step back, fix}
+    \item \textbf{Code Gen}: \textit{program-of-thought, chain-of-code, scratchpad}
+    \item \textbf{Reasoning}: \textit{tree-of-thought, CoT, step-by-step, self-consistency}
+    \item \textbf{Base}: \textit{example, e.g.} (Few-Shot); default (Zero-Shot)
+\end{enumerate}
+
+Confidence = f(pattern matched, specificità, keywords). Is\_Doubtful se < 70\% o pattern competono.
+
+\subsection{Implementazione}
+
+Python 3.9+ con:
+
+\begin{itemize}[noitemsep,leftmargin=*]
+    \item \texttt{streamlit 1.28+}: Web framework
+    \item \texttt{pandas 2.0+}: Data processing
+    \item \texttt{plotly 5.17+}: Visualizzazioni
+    \item \texttt{openpyxl}: Excel I/O
+    \item \texttt{re}: Regex (standard library)
+\end{itemize}
+
+Codice disponibile su GitHub (link in preparazione).
+
+%----------------------------------------------------------------------------------------
+%	RINGRAZIAMENTI
+%----------------------------------------------------------------------------------------
+
+\section*{Ringraziamenti}
+
+Si ringrazia il professore del corso di Software Testing per il dataset e gli studenti partecipanti per aver reso possibile questo studio.
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAFIA
+%----------------------------------------------------------------------------------------
+
+\begin{thebibliography}{9}
+
+\bibitem{wei2022chain}
+Wei J, Wang X, Schuurmans D, et al.
+\textit{Chain-of-Thought Prompting Elicits Reasoning in Large Language Models}.
+Advances in Neural Information Processing Systems 35:24824-24837, 2022.
+
+\bibitem{kojima2022large}
+Kojima T, Gu SS, Reid M, Matsuo Y, Iwasawa Y.
+\textit{Large Language Models are Zero-Shot Reasoners}.
+Advances in Neural Information Processing Systems 35:22199-22213, 2022.
+
+\bibitem{yao2023tree}
+Yao S, Yu D, Zhao J, et al.
+\textit{Tree of Thoughts: Deliberate Problem Solving with Large Language Models}.
+arXiv preprint arXiv:2305.10601, 2023.
+
+\bibitem{chen2022program}
+Chen W, Ma X, Wang X, Cohen WW.
+\textit{Program of Thoughts Prompting: Disentangling Computation from Reasoning for Numerical Reasoning Tasks}.
+arXiv preprint arXiv:2211.12588, 2022.
+
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
