@@ -20,76 +20,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ===== MOTIVAZIONI PREIMPOSTATE PER TECNICHE =====
-MOTIVAZIONI_PREIMPOSTATE = {
-    "Few-Shot": [
-        "Contiene esempi concreti di input/output",
-        "Fornisce scenari di test specifici",
-        "Include casi d'uso dettagliati con dati",
-        "Presenta test case numerati o strutturati",
-        "Mostra esempi di codice o assert statement",
-        "Usa pattern 'Given-When-Then' o simili"
-    ],
-    "Chain-of-Thought": [
-        "Richiede ragionamento passo-passo esplicito",
-        "Usa espressioni sequenziali (first...then...finally)",
-        "Chiede analisi step-by-step del problema",
-        "Richiede processo di pensiero iterativo",
-        "Usa frasi come 'think through', 'walk through'",
-        "Descrive un flusso logico di operazioni"
-    ],
-    "Persona": [
-        "Definisce un ruolo specifico (es. QA engineer, tester)",
-        "Usa costrutti 'act as' o 'you are'",
-        "Assegna expertise o competenze specifiche",
-        "Richiede prospettiva professionale particolare",
-        "Definisce il livello di esperienza (senior, expert, etc.)"
-    ],
-    "Constraint": [
-        "Specifica vincoli tecnici espliciti",
-        "Definisce requisiti obbligatori di output",
-        "Limita lo scope o formato della risposta",
-        "Impone restrizioni su tecnologie/linguaggi",
-        "Richiede conformità a standard specifici"
-    ],
-    "Self-Refine": [
-        "Richiede iterazioni o miglioramenti progressivi",
-        "Chiede revisione o ottimizzazione del codice",
-        "Usa termini come 'refine', 'improve', 'enhance'",
-        "Richiede validazione e correzione iterativa",
-        "Chiede di verificare e migliorare la soluzione"
-    ],
-    "Zero-Shot": [
-        "Nessuna tecnica di prompting evidente",
-        "Richiesta diretta senza esempi o struttura",
-        "Prompt generico senza guida metodologica",
-        "Manca contesto o esempi di supporto"
-    ]
-}
-
-# Motivazioni per combinazioni comuni di tecniche
-MOTIVAZIONI_COMBINAZIONI = {
-    "Few-Shot + Chain-of-Thought": [
-        "Combina esempi concreti con ragionamento sequenziale",
-        "Esempi presentati in passi logici",
-        "Mostra il processo di pensiero attraverso esempi"
-    ],
-    "Persona + Chain-of-Thought": [
-        "Ruolo definito che applica approccio step-by-step",
-        "Expertise specifica applicata metodicamente",
-        "Prospettiva professionale con analisi strutturata"
-    ],
-    "Few-Shot + Constraint": [
-        "Esempi che rispettano vincoli specifici",
-        "Casi d'uso con limitazioni definite",
-        "Scenari vincolati a requisiti particolari"
-    ],
-    "Persona + Few-Shot": [
-        "Ruolo specifico che fornisce esempi dal proprio dominio",
-        "Expertise dimostrata attraverso casi concreti",
-        "Esempi filtrati dalla prospettiva del ruolo"
-    ]
-}
+# Configurazioni rimosse per semplificazione
 
 # ===== FUNZIONI DI SALVATAGGIO/CARICAMENTO =====
 def save_validations_to_file(validations, filename='validations_backup.json'):
@@ -141,6 +72,12 @@ if 'backup_choice_made' not in st.session_state:
 
 if 'filter_validated' not in st.session_state:
     st.session_state.filter_validated = False  # Se True, mostra solo non validate
+
+if 'categorized_labels' not in st.session_state:
+    st.session_state.categorized_labels = {}  # {idx: 'Label pulita'} per risposte corrette
+
+if 'label_counts' not in st.session_state:
+    st.session_state.label_counts = {}  # {'Zero-Shot': 15, 'Few-Shot': 23, ...} registrazione manuale etichette
 
 if 'manual_validations' not in st.session_state:
     st.session_state.manual_validations = {}  # {idx: {'is_correct': bool, 'corrected_technique': str or list}}
@@ -197,14 +134,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Titolo principale
-st.title("🔍 Analisi Sistematica di Prompt Engineering - Multi-Fase")
+st.title("Analisi di Prompt Engineering")
 st.markdown("""
-Applicazione per l'analisi automatica e validazione manuale delle tecniche di prompting  
-secondo la tassonomia del paper *'A Systematic Survey of Prompt Engineering in Large Language Models'*  
-e del corso di **Software Testing** tenuto dal **Prof. Porfirio Tramontana**  
-Università degli Studi di Napoli Federico II
-
-**A cura di:** Castrese Basile
+Analisi e validazione delle tecniche di prompting secondo la tassonomia del paper  
+*'A Systematic Survey of Prompt Engineering in Large Language Models'*.  
+Progetto per il corso di Software Testing - Prof. Porfirio Tramontana  
+Università degli Studi di Napoli Federico II - A cura di Castrese Basile
 """)
 
 # Mostra info se backup trovato (ma non bloccare)
@@ -767,7 +702,7 @@ def create_visualizations(analyzed_df, manual_validations=None):
     
     for technique in analyzed_df[classification_col].unique():
         student_count = len(analyzed_df[
-            analyzed_df['Student_Classification'].str.contains(technique, case=False, na=False)
+            analyzed_df['Student_Classification'].str.contains(technique, case=False, na=False, regex=False)
         ])
         corrected_count = len(analyzed_df[
             analyzed_df[classification_col] == technique
@@ -1028,7 +963,7 @@ def export_to_excel(analyzed_df, original_df=None, validation_data=None):
         comparison_data = []
         for tech in analyzed_df['Corrected_Classification'].unique():
             student_count = len(analyzed_df[
-                analyzed_df['Student_Classification'].str.contains(tech, case=False, na=False)
+                analyzed_df['Student_Classification'].str.contains(tech, case=False, na=False, regex=False)
             ])
             algo_count = len(analyzed_df[
                 analyzed_df['Corrected_Classification'] == tech
@@ -1065,11 +1000,11 @@ uploaded_file = st.sidebar.file_uploader(
 st.sidebar.markdown("---")
 
 # Gestione Backup Validazioni
-st.sidebar.header("💾 Gestione Backup")
+st.sidebar.header("Gestione Backup")
 
 if st.session_state.manual_validations:
     st.sidebar.success(f"✅ {len(st.session_state.manual_validations)} validazioni in memoria")
-    if st.sidebar.button("💾 Salva Backup Manualmente", use_container_width=True):
+    if st.sidebar.button("Salva Backup Manualmente", use_container_width=True):
         success, info = save_validations_to_file(
             st.session_state.manual_validations,
             'validations_backup.json'
@@ -1162,24 +1097,30 @@ if uploaded_file is not None:
     # Progress bar HTML
     phase1_class = "phase-active" if current_phase == 1 else ("phase-completed" if current_phase > 1 else "phase-pending")
     phase2_class = "phase-active" if current_phase == 2 else ("phase-completed" if current_phase > 2 else "phase-pending")
+    phase22_class = "phase-active" if current_phase == 2.2 else ("phase-completed" if current_phase > 2.2 else "phase-pending")
     phase3_class = "phase-active" if current_phase == 3 else "phase-pending"
     
     st.markdown(f"""
     <div class="phase-container">
         <div class="phase-step {phase1_class}">
-            <div style="font-size: 24px;">📂</div>
+            <div style="font-size: 20px;">📂</div>
             <div>FASE 1</div>
-            <div style="font-size: 12px; opacity: 0.9;">Caricamento & Analisi Automatica</div>
+            <div style="font-size: 10px; opacity: 0.9;">Analisi Auto</div>
         </div>
         <div class="phase-step {phase2_class}">
-            <div style="font-size: 24px;">✏️</div>
+            <div style="font-size: 20px;">✏️</div>
             <div>FASE 2</div>
-            <div style="font-size: 12px; opacity: 0.9;">Validazione Manuale Casi Dubbi</div>
+            <div style="font-size: 10px; opacity: 0.9;">Validazione</div>
+        </div>
+        <div class="phase-step {phase22_class}">
+            <div style="font-size: 20px;">🏷️</div>
+            <div>FASE 2.2</div>
+            <div style="font-size: 10px; opacity: 0.9;">Categorizzazione</div>
         </div>
         <div class="phase-step {phase3_class}">
-            <div style="font-size: 24px;">📊</div>
+            <div style="font-size: 20px;">📊</div>
             <div>FASE 3</div>
-            <div style="font-size: 12px; opacity: 0.9;">Statistiche & Risultati Finali</div>
+            <div style="font-size: 10px; opacity: 0.9;">Statistiche</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1455,6 +1396,26 @@ if uploaded_file is not None:
             
             # Filtra solo i casi dubbi
             doubtful_df = analyzed_df[analyzed_df['Is_Doubtful'] == True].copy()
+            total_doubtful = len(doubtful_df)  # Salva il totale prima del filtro
+            
+            # Toggle per filtrare i prompt già validati (se ci sono validazioni)
+            if st.session_state.manual_validations:
+                col_toggle1, col_toggle2 = st.columns([3, 1])
+                with col_toggle1:
+                    previous_filter = st.session_state.filter_validated
+                    show_only_unvalidated = st.checkbox(
+                        "🎯 Mostra solo prompt NON ancora validati", 
+                        value=st.session_state.filter_validated,
+                        help="Se attivo, nasconde i prompt che hai già validato",
+                        key="toggle_filter_validated"
+                    )
+                    # Reset pagina se il filtro è cambiato
+                    if previous_filter != show_only_unvalidated:
+                        st.session_state.validation_page = 0
+                    # Aggiorna il session state
+                    st.session_state.filter_validated = show_only_unvalidated
+                with col_toggle2:
+                    pass  # Spacer
             
             # Se riprendi validazioni, filtra solo quelle NON ancora validate
             if st.session_state.filter_validated and st.session_state.manual_validations:
@@ -1462,13 +1423,22 @@ if uploaded_file is not None:
                 doubtful_df = doubtful_df[~doubtful_df.index.isin(validated_indices)]
                 
                 if len(st.session_state.manual_validations) > 0:
-                    st.info(f"📝 **Modalità Ripresa Attiva**: Mostro solo le istanze NON ancora validate. ({len(st.session_state.manual_validations)} già validate escluse)")
+                    st.info(f"📝 **Filtro attivo**: Mostro solo {len(doubtful_df)} istanze NON ancora validate. ({len(st.session_state.manual_validations)} già validate nascoste)")
             
             if len(doubtful_df) == 0:
-                st.success("🎉 Nessun caso dubbio da validare! Procedi direttamente alla Fase 3.")
-                if st.button("▶️ Procedi a Fase 3: Statistiche Finali", type="primary"):
-                    st.session_state.current_phase = 3
-                    st.rerun()
+                st.success("🎉 Nessun caso dubbio da validare!")
+                
+                col_phase_nav1, col_phase_nav2 = st.columns(2)
+                
+                with col_phase_nav1:
+                    if st.button("▶️ Procedi a Fase 2.2: Categorizzazione Risposte", type="primary", use_container_width=True):
+                        st.session_state.current_phase = 2.2
+                        st.rerun()
+                
+                with col_phase_nav2:
+                    if st.button("⏭️ Salta a Fase 3: Statistiche Finali", type="secondary", use_container_width=True):
+                        st.session_state.current_phase = 3
+                        st.rerun()
             else:
                 # Metriche validazione
                 validated_count = sum(1 for v in st.session_state.manual_validations.values() if not v.get('skipped', False))
@@ -1479,13 +1449,13 @@ if uploaded_file is not None:
                 col1, col2, col3, col4, col5 = st.columns(5)
                 
                 with col1:
-                    st.metric("Casi Dubbi Totali", len(doubtful_df))
+                    st.metric("Casi Dubbi Totali", total_doubtful)
                 
                 with col2:
                     st.metric(
                         "Validati",
                         validated_count,
-                        delta=f"{(validated_count/len(doubtful_df)*100):.0f}%"
+                        delta=f"{(validated_count/total_doubtful*100):.0f}%" if total_doubtful > 0 else "0%"
                     )
                 
                 with col3:
@@ -1503,22 +1473,26 @@ if uploaded_file is not None:
                     )
                 
                 with col5:
-                    remaining = len(doubtful_df) - total_processed
+                    remaining = total_doubtful - total_processed
                     st.metric(
                         "Rimanenti",
-                        remaining,
+                        max(0, remaining),  # Non mostrare valori negativi
                         delta_color="inverse"
                     )
                 
-                st.info("⚡ **Validazione Ultra-Rapida**: Le modifiche vengono salvate senza ricaricamento. Al cambio pagina tutti i dati vengono aggiornati.")
+                # Progress Bar
+                progress_pct = (validated_count / total_doubtful * 100) if total_doubtful > 0 else 0
+                st.progress(progress_pct / 100, text=f"Progresso: {validated_count}/{total_doubtful} validati ({progress_pct:.1f}%)")
+                
+                st.info("Le modifiche vengono salvate automaticamente. Al cambio pagina i dati vengono aggiornati.")
                 
                 # === BACKUP E RIPRISTINO ===
-                st.markdown("### 💾 Backup e Ripristino")
+                st.markdown("### Backup e Ripristino")
                 
                 col_backup1, col_backup2, col_backup3 = st.columns([2, 2, 1])
                 
                 with col_backup1:
-                    st.success(f"🔄 **Auto-salvataggio attivo**: {len(st.session_state.manual_validations)} validazioni salvate automaticamente")
+                    st.success(f"Auto-salvataggio attivo: {len(st.session_state.manual_validations)} validazioni salvate")
                 
                 with col_backup2:
                     # Pulsante per download manuale del backup
@@ -1531,7 +1505,7 @@ if uploaded_file is not None:
                         backup_json = json.dumps(backup_data, indent=2, ensure_ascii=False)
                         
                         st.download_button(
-                            label="📥 Scarica Backup JSON",
+                            label="Scarica Backup JSON",
                             data=backup_json,
                             file_name=f"validazioni_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
                             mime="application/json",
@@ -1542,7 +1516,7 @@ if uploaded_file is not None:
                 with col_backup3:
                     # Pulsante per caricare backup
                     uploaded_backup = st.file_uploader(
-                        "📤 Carica Backup",
+                        "Carica Backup",
                         type=['json'],
                         key="backup_uploader",
                         help="Carica un file di backup precedente"
@@ -1562,10 +1536,12 @@ if uploaded_file is not None:
                 
                 # Paginazione
                 items_per_page = 5
-                total_pages = (len(doubtful_df) + items_per_page - 1) // items_per_page
-                current_page = st.session_state.validation_page
+                total_pages = max(1, (len(doubtful_df) + items_per_page - 1) // items_per_page)
+                # Assicura che current_page sia valida
+                current_page = min(st.session_state.validation_page, total_pages - 1)
+                st.session_state.validation_page = max(0, current_page)
                 
-                col1, col2, col3 = st.columns([1, 2, 1])
+                col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
                 
                 with col1:
                     if st.button("⬅️ Precedente", disabled=current_page == 0):
@@ -1578,6 +1554,13 @@ if uploaded_file is not None:
                 with col3:
                     if st.button("➡️ Successiva", disabled=current_page >= total_pages - 1):
                         st.session_state.validation_page += 1
+                        st.rerun()
+                
+                with col4:
+                    # Pulsante per saltare al primo non validato
+                    if not st.session_state.filter_validated and st.button("🎯 Vai a non validati", help="Attiva filtro e vai all'inizio"):
+                        st.session_state.filter_validated = True
+                        st.session_state.validation_page = 0
                         st.rerun()
                 
                 st.markdown("---")
@@ -1677,7 +1660,6 @@ if uploaded_file is not None:
                     
                     # Multiselect condizionale
                     selected_techniques = []
-                    selected_motivation = None
                     if validation_choice in ["Parziale", "Errata", "Conferma Algoritmo"]:
                         # Default: recupera tecniche se già validato
                         default_tech = []
@@ -1706,47 +1688,9 @@ if uploaded_file is not None:
                             help="Parziale: aggiungi le mancanti | Errata/Conferma: tecniche corrette",
                             disabled=(validation_choice == "Conferma Algoritmo")  # Disabilita se conferma algoritmo
                         )
-                        
-                        # DROPDOWN MOTIVAZIONI PREIMPOSTATE
-                        if selected_techniques:
-                            st.markdown("#### 💡 Motivazione (opzionale)")
-                            
-                            # Determina quali motivazioni mostrare
-                            motivations_to_show = []
-                            
-                            # Se è una combinazione comune, mostra quelle
-                            if len(selected_techniques) > 1:
-                                combo_key = " + ".join(sorted(selected_techniques))
-                                if combo_key in MOTIVAZIONI_COMBINAZIONI:
-                                    motivations_to_show = MOTIVAZIONI_COMBINAZIONI[combo_key]
-                                    st.caption(f"🔗 Motivazioni per la combinazione: **{combo_key}**")
-                            
-                            # Altrimenti usa le motivazioni della singola tecnica
-                            if not motivations_to_show and len(selected_techniques) == 1:
-                                tech = selected_techniques[0]
-                                if tech in MOTIVAZIONI_PREIMPOSTATE:
-                                    motivations_to_show = MOTIVAZIONI_PREIMPOSTATE[tech]
-                                    st.caption(f"Motivazioni per: **{tech}**")
-                            
-                            # Se nessuna motivazione specifica, mostra un messaggio
-                            if not motivations_to_show:
-                                motivations_to_show = [
-                                    "Combinazione custom - specifica nelle note",
-                                    "Motivazione non standard"
-                                ]
-                                st.caption("⚠️ Combinazione non standard - usa le note per dettagli")
-                            
-                            # Dropdown motivazioni
-                            selected_motivation = st.selectbox(
-                                "Seleziona motivazione",
-                                options=["Nessuna"] + motivations_to_show,
-                                key=f"motivation_{idx}",
-                                label_visibility="collapsed",
-                                help="Seleziona una motivazione preimpostata o lascia 'Nessuna' e specifica nelle note"
-                            )
                     
                     # Note opzionali compatte
-                    with st.expander("📝 Aggiungi note (opzionale)", expanded=False):
+                    with st.expander("Aggiungi note (opzionale)", expanded=False):
                         default_notes = validation.get('notes', '') if is_validated else ''
                         notes = st.text_area(
                             "Note",
@@ -1788,11 +1732,10 @@ if uploaded_file is not None:
                                     'partially_correct': False,
                                     'corrected_technique': row['Corrected_Classification'],
                                     'notes': st.session_state.get(f'validation_notes_{idx}', ''),
-                                    'motivation': selected_motivation if selected_motivation and selected_motivation != "Nessuna" else '',
                                     'confirmed_algorithm': True
                                 }
-                                auto_save_validations()  # SALVATAGGIO AUTOMATICO
-                                st.toast(f"🤖 Prompt #{idx}: Classificazione algoritmo confermata ({row['Corrected_Classification']})!", icon="🤖")
+                                auto_save_validations()
+                                st.toast(f"Prompt #{idx}: Classificazione algoritmo confermata ({row['Corrected_Classification']})")
                             elif validation_choice == "Corretta":
                                 st.session_state.manual_validations[idx] = {
                                     'is_correct': True,
@@ -1800,28 +1743,26 @@ if uploaded_file is not None:
                                     'corrected_technique': None,
                                     'notes': st.session_state.get(f'validation_notes_{idx}', '')
                                 }
-                                auto_save_validations()  # SALVATAGGIO AUTOMATICO
-                                st.toast(f"✅ Prompt #{idx}: Confermata corretta!", icon="✅")
+                                auto_save_validations()
+                                st.toast(f"Prompt #{idx}: Confermata corretta")
                             elif validation_choice == "Parziale":
                                 st.session_state.manual_validations[idx] = {
                                     'is_correct': False,
                                     'partially_correct': True,
                                     'corrected_technique': selected_techniques if len(selected_techniques) > 1 else selected_techniques[0],
-                                    'notes': st.session_state.get(f'validation_notes_{idx}', ''),
-                                    'motivation': selected_motivation if selected_motivation and selected_motivation != "Nessuna" else ''
+                                    'notes': st.session_state.get(f'validation_notes_{idx}', '')
                                 }
-                                auto_save_validations()  # SALVATAGGIO AUTOMATICO
-                                st.toast(f"⚠️ Prompt #{idx}: Parziale (+{', '.join(selected_techniques)})!", icon="⚠️")
+                                auto_save_validations()
+                                st.toast(f"Prompt #{idx}: Parziale (+{', '.join(selected_techniques)})")
                             elif validation_choice == "Errata":
                                 st.session_state.manual_validations[idx] = {
                                     'is_correct': False,
                                     'partially_correct': False,
                                     'corrected_technique': selected_techniques if len(selected_techniques) > 1 else selected_techniques[0],
-                                    'notes': st.session_state.get(f'validation_notes_{idx}', ''),
-                                    'motivation': selected_motivation if selected_motivation and selected_motivation != "Nessuna" else ''
+                                    'notes': st.session_state.get(f'validation_notes_{idx}', '')
                                 }
-                                auto_save_validations()  # SALVATAGGIO AUTOMATICO
-                                st.toast(f"❌ Prompt #{idx}: Errata → {', '.join(selected_techniques)}!", icon="❌")
+                                auto_save_validations()
+                                st.toast(f"Prompt #{idx}: Errata -> {', '.join(selected_techniques)}")
                             else:  # Scarta
                                 st.session_state.manual_validations[idx] = {
                                     'is_correct': None,
@@ -1860,17 +1801,217 @@ if uploaded_file is not None:
                 
                 st.markdown("---")
                 
-                # Pulsante per procedere a Fase 3
+                # Pulsante per procedere a Fase 2.2
                 st.markdown("### ➡️ Prossimo Passo")
                 
-                if validated_count >= len(doubtful_df):
-                    st.success(f"🎉 Hai validato tutti i {len(doubtful_df)} casi dubbi! Procedi alla Fase 3 per vedere le statistiche finali.")
+                if validated_count >= total_doubtful:
+                    st.success(f"🎉 Hai validato tutti i {total_doubtful} casi dubbi! Procedi alla Fase 2.2 per categorizzare le risposte corrette.")
                     proceed_button_type = "primary"
                 else:
-                    st.warning(f"⚠️ Hai validato {validated_count}/{len(doubtful_df)} casi dubbi. Puoi procedere comunque o completare la validazione.")
+                    st.warning(f"⚠️ Hai validato {validated_count}/{total_doubtful} casi dubbi. Puoi procedere comunque o completare la validazione.")
                     proceed_button_type = "secondary"
                 
-                if st.button("▶️ Procedi a Fase 3: Statistiche Finali", type=proceed_button_type, use_container_width=True):
+                if st.button("▶️ Procedi a Fase 2.2: Categorizzazione Risposte", type=proceed_button_type, use_container_width=True):
+                    st.session_state.current_phase = 2.2
+                    st.rerun()
+        
+        # ===== FASE 2.2: ESPORTA RISPOSTE CORRETTE =====
+        elif st.session_state.current_phase == 2.2:
+            st.header("📥 FASE 2.2: Esporta Risposte Validate come Corrette")
+            st.markdown("""
+            In questa fase puoi **esportare** solo le risposte dove hai cliccato **"✅ Corretta"** nella Fase 2.
+            
+            **Contenuto:** SOLO le risposte dove hai confermato che lo studente aveva ragione.
+            
+            **Escluso:** 
+            - Risposte "Parziali" (dove hai aggiunto tecniche)
+            - Risposte "Errate" (anche se le hai corrette)
+            - Risposte dove hai confermato l'algoritmo
+            - Match esatti non validati manualmente
+            """)
+            
+            analyzed_df = st.session_state.analyzed_data
+            manual_validations = st.session_state.manual_validations
+            
+            # Filtra SOLO le risposte dove hai cliccato "Corretta"
+            correct_indices = [idx for idx, val in manual_validations.items() 
+                             if val.get('is_correct', False) 
+                             and not val.get('partially_correct', False)
+                             and not val.get('skipped', False)
+                             and not val.get('confirmed_algorithm', False)]
+            
+            if len(correct_indices) == 0:
+                st.info("ℹ️ Nessuna risposta validata manualmente come \"Corretta\" nella Fase 2. Procedi alla Fase 3.")
+                if st.button("▶️ Salta a Fase 3: Statistiche Finali", type="primary"):
+                    st.session_state.current_phase = 3
+                    st.rerun()
+            else:
+                st.success(f"✅ {len(correct_indices)} risposte validate manualmente come **Corretta** pronte per l'esportazione")
+                
+                # Crea DataFrame con le risposte corrette
+                correct_df = analyzed_df.loc[correct_indices].copy()
+                
+                # Seleziona SOLO colonne degli studenti (senza algoritmo)
+                possible_columns = [
+                    'Application', 'LLM_Used', 'Prompt_Text', 
+                    'Student_Classification'
+                ]
+                export_columns = [col for col in possible_columns if col in correct_df.columns]
+                export_df = correct_df[export_columns]
+                
+                # Preview dei dati
+                st.markdown("### 👀 Anteprima Dati da Esportare")
+                st.dataframe(export_df.head(10), use_container_width=True)
+                
+                if len(correct_indices) > 10:
+                    st.caption(f"Mostrate prime 10 righe di {len(correct_indices)} totali")
+                
+                st.markdown("---")
+                
+                # Pulsante per esportare
+                st.markdown("### 💾 Esporta in Excel")
+                
+                import io
+                from datetime import datetime
+                
+                # Crea file Excel in memoria
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    export_df.to_excel(writer, sheet_name='Validate_Corrette', index=True)
+                output.seek(0)
+                
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"validate_corrette_{timestamp}.xlsx"
+                
+                st.download_button(
+                    label=f"📥 Scarica Excel - {len(correct_indices)} Risposte Validate come Corrette",
+                    data=output,
+                    file_name=filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True,
+                    help="Include SOLO le risposte dove hai cliccato il pulsante '✅ Corretta' nella Fase 2"
+                )
+                
+                st.markdown("---")
+                
+                # Sezione per registrare etichette e conteggi manualmente
+                st.markdown("### Registra Risultati per Etichetta (Opzionale)")
+                st.markdown("""
+                Inserisci manualmente quante istanze validate come corrette appartengono a ciascuna tecnica/etichetta.
+                Questo è opzionale e serve per documentazione aggiuntiva.
+                """)
+                
+                # Lista tecniche standard
+                standard_labels = [
+                    "Zero-Shot", "Few-Shot", "Chain-of-Thought", "Auto-CoT", "LogiCoT", "LCoT",
+                    "Tree-of-Thoughts", "Graph-of-Thought", "Self-Consistency", "System-2-Attention",
+                    "Structured CoT", "Program-of-Thoughts", "Chain-of-Code", "Scratchpad",
+                    "Self-Refine", "Take-a-Step-Back", "Fix-Prompt", "Persona/Role Prompting",
+                    "Few-Shot + Chain-of-Thought", "Persona + Few-Shot", "Persona + Chain-of-Thought"
+                ]
+                
+                # Scegli tra etichetta predefinita o personalizzata
+                label_type = st.radio(
+                    "Tipo di etichetta:",
+                    options=["Predefinita", "Personalizzata"],
+                    horizontal=True,
+                    key="label_type_radio"
+                )
+                
+                col1, col2, col3 = st.columns([2, 1, 1])
+                
+                with col1:
+                    if label_type == "Predefinita":
+                        selected_label = st.selectbox(
+                            "Seleziona Etichetta",
+                            options=standard_labels,
+                            key="label_selector"
+                        )
+                    else:
+                        selected_label = st.text_input(
+                            "Inserisci Etichetta Personalizzata",
+                            placeholder="Es: Zero-Shot + LCoT",
+                            key="custom_label_input"
+                        )
+                
+                with col2:
+                    count_value = st.number_input(
+                        "Numero Istanze",
+                        min_value=0,
+                        max_value=len(correct_indices),
+                        value=1,
+                        step=1,
+                        key="count_input"
+                    )
+                
+                with col3:
+                    st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+                    # Disabilita il pulsante se l'etichetta personalizzata è vuota
+                    is_disabled = (label_type == "Personalizzata" and not selected_label)
+                    if st.button("Aggiungi", type="secondary", use_container_width=True, disabled=is_disabled):
+                        st.session_state.label_counts[selected_label] = count_value
+                        st.success(f"Aggiunto: {selected_label} = {count_value}")
+                        st.rerun()
+                
+                # Mostra etichette registrate
+                if len(st.session_state.label_counts) > 0:
+                    st.markdown("#### Etichette Registrate")
+                    
+                    # Crea tabella con le etichette
+                    labels_data = []
+                    for label, count in st.session_state.label_counts.items():
+                        labels_data.append({
+                            'Etichetta': label,
+                            'Numero Istanze': count
+                        })
+                    
+                    labels_df = pd.DataFrame(labels_data)
+                    
+                    # Mostra con opzione di rimozione
+                    for idx, row in labels_df.iterrows():
+                        col1, col2, col3 = st.columns([3, 1, 1])
+                        with col1:
+                            st.text(f"🏷️ {row['Etichetta']}")
+                        with col2:
+                            st.text(f"📊 {row['Numero Istanze']}")
+                        with col3:
+                            if st.button("🗑️", key=f"remove_{idx}", help="Rimuovi questa etichetta"):
+                                del st.session_state.label_counts[row['Etichetta']]
+                                st.rerun()
+                    
+                    # Totale
+                    total_counted = sum(st.session_state.label_counts.values())
+                    st.metric("Totale Istanze Registrate", total_counted)
+                    
+                    # Esporta anche le etichette in Excel
+                    st.markdown("---")
+                    output_labels = io.BytesIO()
+                    with pd.ExcelWriter(output_labels, engine='openpyxl') as writer:
+                        labels_df.to_excel(writer, sheet_name='Etichette_Conteggi', index=False)
+                    output_labels.seek(0)
+                    
+                    timestamp_labels = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename_labels = f"etichette_conteggi_{timestamp_labels}.xlsx"
+                    
+                    st.download_button(
+                        label="📊 Scarica Excel con Etichette e Conteggi",
+                        data=output_labels,
+                        file_name=filename_labels,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        type="secondary",
+                        use_container_width=True
+                    )
+                else:
+                    st.info("ℹ️ Nessuna etichetta registrata ancora. Aggiungi la prima etichetta sopra.")
+                
+                st.markdown("---")
+                
+                # Pulsante per procedere a Fase 3
+                st.markdown("### ➡️ Prossimo Passo")
+                st.info("Puoi scaricare i file Excel e poi procedere alle statistiche finali")
+                
+                if st.button("▶️ Procedi a Fase 3: Statistiche Finali", type="primary", use_container_width=True):
                     st.session_state.current_phase = 3
                     st.rerun()
         
@@ -1898,8 +2039,8 @@ if uploaded_file is not None:
                             final_df.at[idx, 'Final_Classification'] = final_df.at[idx, 'Corrected_Classification']
                             final_df.at[idx, 'Manually_Validated'] = 'Skipped'
                         elif validation.get('is_correct', False):
-                            # Studente era corretto - usa classificazione studente come finale
-                            final_df.at[idx, 'Final_Classification'] = final_df.at[idx, 'Student_Classification']
+                            # Studente era corretto - marcatore per etichetta manuale (Fase 2.2)
+                            final_df.at[idx, 'Final_Classification'] = '[ETICHETTA_MANUALE]'
                             final_df.at[idx, 'Manually_Validated'] = 'Confirmed_Student'
                         elif validation.get('partially_correct', False):
                             # Parzialmente corretto - combina risposta studente + tecniche aggiuntive
@@ -1936,8 +2077,36 @@ if uploaded_file is not None:
                     final_df['Validation_Notes'] = ''
                 final_df['Validation_Notes'].fillna('', inplace=True)
             
+            # RICALCOLA Match_Type basandosi su Final_Classification (post-validazione)
+            def recalculate_match_type(row):
+                final_class = str(row['Final_Classification']).lower().strip()
+                
+                # Caso speciale: etichetta manuale dalla Fase 2.2 (studente confermato corretto)
+                if final_class == '[etichetta_manuale]':
+                    return 'exact'
+                
+                student_class = str(row['Student_Classification']).lower().strip()
+                
+                # Match esatto: studente ha scritto esattamente la tecnica finale (case-insensitive)
+                if student_class == final_class:
+                    return 'exact'
+                
+                # Match parziale: uno contiene l'altro
+                if student_class in final_class or final_class in student_class:
+                    return 'partial'
+                
+                # Controllo per tecniche combinate (es. "Few-Shot" in "Persona + Few-Shot")
+                final_parts = [p.strip().lower() for p in final_class.split('+')]
+                if student_class in final_parts or any(student_class in part for part in final_parts):
+                    return 'partial'
+                
+                # Nessun match: errore
+                return 'error'
+            
+            final_df['Match_Type'] = final_df.apply(recalculate_match_type, axis=1)
+            
             # Metriche principali Fase 3
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 st.metric("Total Prompts Analizzati", len(final_df))
@@ -1958,14 +2127,6 @@ if uploaded_file is not None:
                     help="Casi dubbi dove la risposta studente è stata validata come corretta"
                 )
             
-            with col4:
-                manually_corrected = (final_df['Manually_Validated'] == 'Manually_Corrected').sum()
-                st.metric(
-                    "Correzioni Manuali",
-                    manually_corrected,
-                    help="Casi dubbi dove è stata inserita una correzione manuale"
-                )
-            
             st.markdown("---")
             
             # ===== GRAFICI E VISUALIZZAZIONI (in expander) =====
@@ -1977,18 +2138,56 @@ if uploaded_file is not None:
             
             # Grafico 1: Distribuzione Tecniche
             with st.expander("📊 Distribuzione Tecniche di Prompting", expanded=True):
-                if 'techniques' in visualizations:
-                    st.plotly_chart(visualizations['techniques'], use_container_width=True)
+                # Combina etichette manuali (Fase 2.2) con classificazioni automatiche/corrette
+                label_counts_manual = st.session_state.label_counts
+                
+                # Conta tecniche da final_df (escludendo le etichette manuali)
+                technique_counts_auto = final_df[final_df['Final_Classification'] != '[ETICHETTA_MANUALE]']['Final_Classification'].value_counts()
+                
+                # Combina i due dizionari
+                combined_counts = {}
+                
+                # Aggiungi conteggi automatici
+                for tech, count in technique_counts_auto.items():
+                    combined_counts[tech] = count
+                
+                # Aggiungi/somma conteggi manuali dalla Fase 2.2
+                for label, count in label_counts_manual.items():
+                    if label in combined_counts:
+                        combined_counts[label] += count
+                    else:
+                        combined_counts[label] = count
+                
+                if len(combined_counts) > 0:
+                    # Crea DataFrame ordinato
+                    sorted_counts = sorted(combined_counts.items(), key=lambda x: x[1], reverse=True)
+                    technique_df = pd.DataFrame({
+                        'Tecnica': [t[0] for t in sorted_counts],
+                        'Conteggio': [t[1] for t in sorted_counts],
+                        'Percentuale': [(t[1] / len(final_df) * 100) for t in sorted_counts]
+                    })
+                    technique_df['Percentuale'] = technique_df['Percentuale'].round(2)
+                    
+                    # Crea grafico
+                    import plotly.express as px
+                    fig = px.bar(
+                        technique_df,
+                        x='Tecnica',
+                        y='Conteggio',
+                        title='Distribuzione Tecniche di Prompting (Finali)',
+                        text='Conteggio'
+                    )
+                    fig.update_traces(textposition='outside')
+                    fig.update_layout(xaxis_tickangle=-45)
+                    st.plotly_chart(fig, use_container_width=True)
                     
                     # Tabella dettagliata
-                    technique_counts = final_df['Final_Classification'].value_counts()
                     st.markdown("#### 📋 Tabella Dettagliata")
-                    technique_df = pd.DataFrame({
-                        'Tecnica': technique_counts.index,
-                        'Conteggio': technique_counts.values,
-                        'Percentuale': (technique_counts.values / len(final_df) * 100).round(2)
-                    })
-                    st.dataframe(technique_df, use_container_width=True)
+                    if len(label_counts_manual) > 0:
+                        st.info(f"✅ Include {sum(label_counts_manual.values())} istanze corrette registrate manualmente nella Fase 2.2")
+                    st.dataframe(technique_df, use_container_width=True, hide_index=True)
+                else:
+                    st.warning("Nessuna tecnica da visualizzare")
             
             # Grafico 2: Distribuzione LLM
             with st.expander("🤖 Distribuzione LLM Utilizzati", expanded=False):
@@ -2002,35 +2201,32 @@ if uploaded_file is not None:
                         key=f"llm_chart_phase3_{data_hash}"
                     )
                     
-                    # Dettagli varianti LLM
-                    with st.expander("🔍 Dettaglio Varianti LLM (clicca per aprire)", expanded=False):
-                        llm_variants = {}
-                        for _, row in final_df.iterrows():
-                            llm_norm = row['LLM_Used']
-                            llm_orig = row.get('LLM_Original', llm_norm)
-                            
-                            if llm_norm not in llm_variants:
-                                llm_variants[llm_norm] = {}
-                            
-                            if llm_orig not in llm_variants[llm_norm]:
-                                llm_variants[llm_norm][llm_orig] = 0
-                            llm_variants[llm_norm][llm_orig] += 1
+                    # Dettagli varianti LLM (senza expander annidato)
+                    st.markdown("---")
+                    st.markdown("#### 🔍 Dettaglio Varianti LLM")
+                    
+                    llm_variants = {}
+                    for _, row in final_df.iterrows():
+                        llm_norm = row['LLM_Used']
+                        llm_orig = row.get('LLM_Original', llm_norm)
                         
-                        for llm_norm in sorted(llm_variants.keys()):
-                            total_prompts = sum(llm_variants[llm_norm].values())
-                            st.markdown(f"#### 🤖 **{llm_norm}** ({total_prompts} prompt)")
-                            sorted_variants = sorted(llm_variants[llm_norm].items(), key=lambda x: x[1], reverse=True)
-                            for variant, count in sorted_variants:
-                                percentage = (count / total_prompts) * 100
-                                st.write(f"  • `{variant}`: {count} ({percentage:.1f}%)")
-                            st.markdown("---")
+                        if llm_norm not in llm_variants:
+                            llm_variants[llm_norm] = {}
+                        
+                        if llm_orig not in llm_variants[llm_norm]:
+                            llm_variants[llm_norm][llm_orig] = 0
+                        llm_variants[llm_norm][llm_orig] += 1
+                    
+                    for llm_norm in sorted(llm_variants.keys()):
+                        total_prompts = sum(llm_variants[llm_norm].values())
+                        st.markdown(f"**{llm_norm}** ({total_prompts} prompt)")
+                        sorted_variants = sorted(llm_variants[llm_norm].items(), key=lambda x: x[1], reverse=True)
+                        for variant, count in sorted_variants:
+                            percentage = (count / total_prompts) * 100
+                            st.write(f"  • `{variant}`: {count} ({percentage:.1f}%)")
+                        st.markdown("---")
             
-            # Grafico 3: Confronto Studenti vs Algoritmo
-            with st.expander("📊 Confronto Classificazioni: Studenti vs Algoritmo", expanded=False):
-                if 'comparison' in visualizations:
-                    st.plotly_chart(visualizations['comparison'], use_container_width=True)
-            
-            # Grafico 4: Tasso di Errore
+            # Grafico 3: Tasso di Errore
             with st.expander("🎯 Tasso di Errore degli Studenti", expanded=False):
                 st.markdown("""
                 **📊 Cos'è il Tasso di Errore?**
@@ -2065,10 +2261,46 @@ if uploaded_file is not None:
             # ===== STATISTICHE DETTAGLIATE =====
             st.markdown("### 📊 Statistiche Dettagliate")
             
+            # Impatto Validazioni Manuali
+            with st.expander("✏️ Impatto delle Validazioni Manuali", expanded=False):
+                st.markdown("#### 📊 Come le validazioni manuali hanno modificato i risultati")
+                
+                if len(manual_validations) > 0:
+                    # Conta le diverse categorie
+                    confirmed = (final_df['Manually_Validated'] == 'Confirmed_Student').sum()
+                    corrected = (final_df['Manually_Validated'] == 'Manually_Corrected').sum()
+                    partial = (final_df['Manually_Validated'] == 'Partially_Correct').sum()
+                    algo_only = (final_df['Manually_Validated'] == 'Algorithm_Only').sum()
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("✅ Studente Confermato", confirmed, help="Casi dubbi dove lo studente aveva ragione")
+                    with col2:
+                        st.metric("❌ Totalmente Errato", corrected, help="Casi dubbi corretti completamente")
+                    with col3:
+                        st.metric("⚠️ Parzialmente Corretto", partial, help="Studente parzialmente corretto")
+                    with col4:
+                        st.metric("🤖 Solo Algoritmo", algo_only, help="Non validati manualmente")
+                    
+                    # Distribuzione
+                    validation_dist = pd.DataFrame({
+                        'Tipo Validazione': ['Studente Confermato', 'Completamente Errato', 'Parziale', 'Solo Algoritmo'],
+                        'Conteggio': [confirmed, corrected, partial, algo_only],
+                        'Percentuale': [
+                            f"{confirmed/len(final_df)*100:.1f}%",
+                            f"{corrected/len(final_df)*100:.1f}%",
+                            f"{partial/len(final_df)*100:.1f}%",
+                            f"{algo_only/len(final_df)*100:.1f}%"
+                        ]
+                    })
+                    st.dataframe(validation_dist, use_container_width=True, hide_index=True)
+                else:
+                    st.info("🤖 Nessuna validazione manuale effettuata. Tutti i risultati sono stati determinati dall'algoritmo.")
+            
             # Statistica 1: Analisi per Modello LLM
             with st.expander("🤖 Analisi Dettagliata per Modello LLM", expanded=False):
                 st.markdown("#### 📈 Prestazioni per Modello LLM")
-                st.caption("Analisi della distribuzione delle tecniche e degli errori per ciascun modello LLM utilizzato")
+                st.caption("Quali LLM hanno prodotto le classificazioni più corrette (basato sui risultati finali)")
                 
                 # Raggruppa per LLM
                 llm_stats = []
@@ -2080,8 +2312,9 @@ if uploaded_file is not None:
                     errors = (llm_df['Match_Type'] == 'error').sum()
                     error_rate = (errors / total_prompts * 100) if total_prompts > 0 else 0
                     
-                    # Tecnica più usata
-                    most_common_technique = llm_df['Final_Classification'].mode()[0] if len(llm_df) > 0 else 'N/A'
+                    # Tecnica più usata (escludi etichette manuali segnaposto)
+                    llm_df_filtered = llm_df[llm_df['Final_Classification'] != '[ETICHETTA_MANUALE]']
+                    most_common_technique = llm_df_filtered['Final_Classification'].mode()[0] if len(llm_df_filtered) > 0 else 'N/A'
                     
                     # Validazioni manuali
                     manual_vals = llm_df[llm_df['Manually_Validated'] != 'Algorithm_Only']
@@ -2111,100 +2344,241 @@ if uploaded_file is not None:
                     use_container_width=True
                 )
             
-            # Statistica 2: Analisi per Tecnica di Prompting
-            with st.expander("🎯 Analisi Dettagliata per Tecnica di Prompting", expanded=False):
-                st.markdown("#### 📊 Prestazioni per Tecnica di Prompting")
-                st.caption("Analisi della distribuzione e degli errori per ciascuna tecnica di prompting rilevata")
+            # Statistica 2: Analisi per Tecnica di Prompting (risultati corretti)
+            with st.expander("🎯 Tecniche di Prompting Utilizzate (Risultati Corretti)", expanded=False):
+                st.markdown("#### 📊 Quali Tecniche Sono State Realmente Utilizzate")
+                st.caption("Basato sulle classificazioni finali corrette (post-validazione)")
                 
-                # Raggruppa per tecnica
+                # Raggruppa per tecnica FINALE (corretta)
                 technique_stats = []
                 for technique in final_df['Final_Classification'].unique():
                     tech_df = final_df[final_df['Final_Classification'] == technique]
                     total_prompts = len(tech_df)
                     
-                    # Calcola errori
-                    errors = (tech_df['Match_Type'] == 'error').sum()
-                    error_rate = (errors / total_prompts * 100) if total_prompts > 0 else 0
-                    
-                    # Match esatti
-                    exact_matches = (tech_df['Match_Type'] == 'exact').sum()
-                    exact_pct = (exact_matches / total_prompts * 100) if total_prompts > 0 else 0
+                    # Studenti che l'hanno indovinata
+                    correctly_guessed = (tech_df['Match_Type'] == 'exact').sum()
+                    guess_rate = (correctly_guessed / total_prompts * 100) if total_prompts > 0 else 0
                     
                     # LLM più usato per questa tecnica
                     most_common_llm = tech_df['LLM_Used'].mode()[0] if len(tech_df) > 0 else 'N/A'
                     
-                    # Confidenza media
-                    avg_confidence = tech_df['Confidence'].mean() if 'Confidence' in tech_df.columns else 0
+                    # App più comune
+                    most_common_app = tech_df['Application'].mode()[0] if len(tech_df) > 0 else 'N/A'
                     
                     technique_stats.append({
-                        'Tecnica': technique,
-                        'Tot. Prompts': total_prompts,
+                        'Tecnica (Corretta)': technique,
+                        'Utilizzi Totali': total_prompts,
                         '% sul Totale': f"{(total_prompts/len(final_df)*100):.1f}%",
-                        'Match Esatti': exact_matches,
-                        '% Match Esatti': f"{exact_pct:.1f}%",
-                        'Errori': errors,
-                        '% Errori': f"{error_rate:.1f}%",
-                        'LLM Predominante': most_common_llm,
-                        'Confidenza Media': f"{avg_confidence:.1f}%"
+                        "Studenti che l'hanno Indovinata": correctly_guessed,
+                        '% Indovinata': f"{guess_rate:.1f}%",
+                        'LLM Principale': most_common_llm,
+                        'App Principale': most_common_app
                     })
                 
-                technique_stats_df = pd.DataFrame(technique_stats).sort_values('Tot. Prompts', ascending=False)
+                technique_stats_df = pd.DataFrame(technique_stats).sort_values('Utilizzi Totali', ascending=False)
                 st.dataframe(technique_stats_df, use_container_width=True, hide_index=True)
+                
+                # Grafico tecniche più usate
+                fig_tech = px.bar(
+                    technique_stats_df.head(10),
+                    x='Tecnica (Corretta)',
+                    y='Utilizzi Totali',
+                    title='TOP 10 Tecniche Più Utilizzate (Risultati Corretti)',
+                    color='% Indovinata',
+                    color_continuous_scale='RdYlGn',
+                    text='Utilizzi Totali'
+                )
+                fig_tech.update_traces(textposition='outside')
+                fig_tech.update_layout(height=500, xaxis_tickangle=-45)
+                st.plotly_chart(fig_tech, use_container_width=True)
                 
                 # Download CSV statistiche tecniche
                 csv_tech = technique_stats_df.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label="📥 Scarica Statistiche Tecniche (CSV)",
                     data=csv_tech,
-                    file_name="statistiche_per_tecnica.csv",
+                    file_name="statistiche_tecniche_corrette.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
             
-            # Statistica 3: Matrice Confusione (Studente vs Corretto)
-            with st.expander("🔀 Matrice di Confusione: Studente vs Corretto", expanded=False):
-                st.markdown("#### 📊 Confronto Classificazioni Studente vs Finale")
-                st.caption("Mostra le corrispondenze tra ciò che hanno classificato gli studenti e la classificazione finale corretta")
+            # Statistica 3: Confusioni Più Comuni
+            with st.expander("🔀 Confusioni Più Comuni degli Studenti", expanded=False):
+                st.markdown("#### 🎭 Quali tecniche vengono confuse tra loro?")
+                st.caption("Analisi delle confusioni più frequenti: cosa hanno scritto gli studenti quando era sbagliato")
                 
-                # Crea matrice confusione
-                confusion_data = []
-                for idx, row in final_df.iterrows():
-                    student_class = row['Student_Classification']
-                    final_class = row['Final_Classification']
+                # Filtra solo errori
+                errors_only = final_df[final_df['Match_Type'] == 'error'].copy()
+                
+                if len(errors_only) > 0:
+                    # Conta le confusioni
+                    confusion_counts = errors_only.groupby(['Student_Classification', 'Final_Classification']).size().reset_index(name='Frequenza')
+                    confusion_counts.columns = ['Hanno Scritto (ERRORE)', 'Era In Realtà', 'Volte Confuse']
+                    confusion_counts = confusion_counts.sort_values('Volte Confuse', ascending=False)
                     
-                    confusion_data.append({
-                        'Classificazione Studente': student_class,
-                        'Classificazione Finale': final_class,
-                        'Match Type': row['Match_Type']
-                    })
-                
-                confusion_df = pd.DataFrame(confusion_data)
-                
-                # Conta occorrenze
-                confusion_matrix = confusion_df.groupby(['Classificazione Studente', 'Classificazione Finale']).size().reset_index(name='Conteggio')
-                confusion_matrix = confusion_matrix.sort_values('Conteggio', ascending=False)
-                
-                st.dataframe(confusion_matrix.head(30), use_container_width=True, hide_index=True)
-                st.caption("Mostrate le prime 30 combinazioni più frequenti")
-                
-                # Download matrice confusione completa
-                csv_confusion = confusion_matrix.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Scarica Matrice Confusione Completa (CSV)",
-                    data=csv_confusion,
-                    file_name="matrice_confusione.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
+                    st.markdown("##### 🔝 TOP 15 Confusioni Più Frequenti")
+                    st.dataframe(confusion_counts.head(15), use_container_width=True, hide_index=True)
+                    
+                    # Heatmap delle confusioni più comuni
+                    top_wrong = errors_only['Student_Classification'].value_counts().head(5).index.tolist()
+                    top_correct = errors_only['Final_Classification'].value_counts().head(5).index.tolist()
+                    
+                    # Crea matrice per heatmap
+                    heatmap_data = []
+                    for wrong in top_wrong:
+                        row_data = []
+                        for correct in top_correct:
+                            count = len(errors_only[(errors_only['Student_Classification'] == wrong) & 
+                                                    (errors_only['Final_Classification'] == correct)])
+                            row_data.append(count)
+                        heatmap_data.append(row_data)
+                    
+                    fig_heat = go.Figure(data=go.Heatmap(
+                        z=heatmap_data,
+                        x=[f"Era:<br>{t[:20]}" for t in top_correct],
+                        y=[f"Scritto:<br>{t[:20]}" for t in top_wrong],
+                        colorscale='Reds',
+                        text=heatmap_data,
+                        texttemplate='%{text}',
+                        textfont={"size":12}
+                    ))
+                    fig_heat.update_layout(
+                        title='Heatmap delle Confusioni (TOP 5x5)',
+                        xaxis_title='Classificazione Corretta',
+                        yaxis_title='Classificazione Errata (Studente)',
+                        height=500
+                    )
+                    st.plotly_chart(fig_heat, use_container_width=True)
+                    
+                    # Download confusioni
+                    csv_confusion = confusion_counts.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Scarica Analisi Completa Confusioni (CSV)",
+                        data=csv_confusion,
+                        file_name="confusioni_studenti.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                else:
+                    st.success("🎉 Nessuna confusione rilevata! Gli studenti hanno classificato tutto correttamente.")
             
             st.markdown("---")
             
-            # Tabella Finale Completa
+            # Analisi Errori Studenti
+            with st.expander("❌ TOP Errori degli Studenti", expanded=True):
+                st.markdown("#### 🔍 Quali tecniche hanno sbagliato di più?")
+                st.caption("Analisi degli errori più comuni commessi dagli studenti nelle classificazioni")
+                
+                # Filtra solo gli errori
+                errors_df = final_df[final_df['Match_Type'] == 'error'].copy()
+                
+                if len(errors_df) > 0:
+                    # TOP errori: cosa hanno scritto vs cosa era corretto
+                    error_analysis = []
+                    for idx, row in errors_df.iterrows():
+                        error_analysis.append({
+                            'Applicazione': row['Application'],
+                            'LLM Usato': row['LLM_Used'],
+                            'Classificazione Errata (Studente)': row['Student_Classification'],
+                            '→ Classificazione Corretta': row['Final_Classification'],
+                            'Confidenza Algoritmo': f"{row['Confidence']:.0f}%"
+                        })
+                    
+                    error_df = pd.DataFrame(error_analysis)
+                    
+                    # Mostra statistiche errori
+                    st.metric("Totale Errori Rilevati", len(errors_df), delta=f"{len(errors_df)/len(final_df)*100:.1f}% del totale")
+                    
+                    # TOP 10 errori più comuni
+                    st.markdown("##### 🎯 TOP 10 Errori Più Comuni")
+                    error_counts = error_df.groupby(['Classificazione Errata (Studente)', '→ Classificazione Corretta']).size().reset_index(name='Frequenza')
+                    error_counts = error_counts.sort_values('Frequenza', ascending=False).head(10)
+                    st.dataframe(error_counts, use_container_width=True, hide_index=True)
+                    
+                    # Tecnica più sbagliata
+                    st.markdown("##### ⚠️ Tecniche Più Sbagliate dagli Studenti")
+                    wrong_tech_counts = errors_df['Student_Classification'].value_counts().head(5)
+                    wrong_tech_df = pd.DataFrame({
+                        'Tecnica Sbagliata': wrong_tech_counts.index,
+                        'Volte Sbagliata': wrong_tech_counts.values,
+                        '% sugli Errori': (wrong_tech_counts.values / len(errors_df) * 100).round(1)
+                    })
+                    st.dataframe(wrong_tech_df, use_container_width=True, hide_index=True)
+                    
+                    # Download errori
+                    csv_errors = error_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Scarica Lista Completa Errori (CSV)",
+                        data=csv_errors,
+                        file_name="analisi_errori_studenti.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                else:
+                    st.success("🎉 Nessun errore rilevato! Tutti gli studenti hanno classificato correttamente.")
+            
+            # Analisi per Applicazione
+            with st.expander("📱 Prestazioni per Applicazione", expanded=False):
+                st.markdown("#### 📊 Confronto tra le 3 Applicazioni")
+                st.caption("Come si sono comportati gli studenti su ciascuna classe da testare")
+                
+                app_stats = []
+                for app in final_df['Application'].unique():
+                    app_df = final_df[final_df['Application'] == app]
+                    total = len(app_df)
+                    errors = (app_df['Match_Type'] == 'error').sum()
+                    exact = (app_df['Match_Type'] == 'exact').sum()
+                    
+                    # Tecnica più usata (escludi etichette manuali segnaposto)
+                    app_df_filtered = app_df[app_df['Final_Classification'] != '[ETICHETTA_MANUALE]']
+                    top_tech = app_df_filtered['Final_Classification'].mode()[0] if len(app_df_filtered) > 0 else 'N/A'
+                    
+                    # LLM più usato
+                    top_llm = app_df['LLM_Used'].mode()[0] if len(app_df) > 0 else 'N/A'
+                    
+                    app_stats.append({
+                        'Applicazione': app,
+                        'Tot. Prompt': total,
+                        'Match Esatti': exact,
+                        '% Corrette': f"{(exact/total*100):.1f}%",
+                        'Errori': errors,
+                        '% Errori': f"{(errors/total*100):.1f}%",
+                        'Tecnica Prevalente': top_tech,
+                        'LLM Prevalente': top_llm
+                    })
+                
+                app_stats_df = pd.DataFrame(app_stats)
+                st.dataframe(app_stats_df, use_container_width=True, hide_index=True)
+                
+                # Grafico prestazioni per app
+                fig_app = go.Figure()
+                fig_app.add_trace(go.Bar(
+                    name='Match Esatti',
+                    x=app_stats_df['Applicazione'],
+                    y=[float(x.replace('%', '')) for x in app_stats_df['% Corrette']],
+                    marker_color='green'
+                ))
+                fig_app.add_trace(go.Bar(
+                    name='Errori',
+                    x=app_stats_df['Applicazione'],
+                    y=[float(x.replace('%', '')) for x in app_stats_df['% Errori']],
+                    marker_color='red'
+                ))
+                fig_app.update_layout(
+                    title='Percentuale Match Esatti vs Errori per Applicazione',
+                    yaxis_title='Percentuale (%)',
+                    barmode='group',
+                    height=400
+                )
+                st.plotly_chart(fig_app, use_container_width=True)
+            
+            # Tabella Finale Completa (SENZA testo prompt)
             with st.expander("📋 Visualizza Tabella Completa Risultati Finali", expanded=False):
+                st.warning("⚠️ Nota: I testi dei prompt sono stati rimossi da questa visualizzazione per privacy e leggibilità")
                 display_cols = [
-                    'Application', 'LLM_Used', 'Prompt_Text', 
+                    'Application', 'LLM_Used',
                     'Student_Classification', 'Final_Classification',
-                    'Confidence', 'Match_Type', 'Manually_Validated', 'Validation_Notes'
+                    'Confidence', 'Match_Type', 'Manually_Validated'
                 ]
                 available_cols = [col for col in display_cols if col in final_df.columns]
                 st.dataframe(final_df[available_cols], use_container_width=True, height=400)
@@ -2271,7 +2645,8 @@ if uploaded_file is not None:
                     total_prompts = len(llm_df)
                     errors = (llm_df['Match_Type'] == 'error').sum()
                     error_rate = (errors / total_prompts * 100) if total_prompts > 0 else 0
-                    most_common_technique = llm_df['Final_Classification'].mode()[0] if len(llm_df) > 0 else 'N/A'
+                    llm_df_filtered = llm_df[llm_df['Final_Classification'] != '[ETICHETTA_MANUALE]']
+                    most_common_technique = llm_df_filtered['Final_Classification'].mode()[0] if len(llm_df_filtered) > 0 else 'N/A'
                     manual_vals = llm_df[llm_df['Manually_Validated'] != 'Algorithm_Only']
                     manual_count = len(manual_vals)
                     manual_pct = (manual_count / total_prompts * 100) if total_prompts > 0 else 0

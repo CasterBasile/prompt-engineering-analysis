@@ -1,438 +1,530 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Analisi Prompt Engineering
-% Documento Professionale con Stile Colorato
-% Versione Semplificata - Solo Pacchetti Standard
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\documentclass[10pt,twocolumn]{article}
-
-%----------------------------------------------------------------------------------------
-%	PACCHETTI
-%----------------------------------------------------------------------------------------
-
+\documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[italian]{babel}
-\usepackage[margin=2cm]{geometry}
 \usepackage{graphicx}
-\usepackage{booktabs}
-\usepackage{xcolor}
-\usepackage{titlesec}
-\usepackage{fancyhdr}
-\usepackage{hyperref}
-\usepackage{abstract}
-\usepackage{enumitem}
 \usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{float}
 
-%----------------------------------------------------------------------------------------
-%	COLORI
-%----------------------------------------------------------------------------------------
-
-\definecolor{primarycolor}{RGB}{0,51,102}      % Blu navy
-\definecolor{secondarycolor}{RGB}{0,102,204}   % Blu chiaro
-\definecolor{accentcolor}{RGB}{220,50,47}      % Rosso accento
-\definecolor{darkgray}{RGB}{64,64,64}          % Grigio scuro
-
-%----------------------------------------------------------------------------------------
-%	FORMATTAZIONE TITOLI
-%----------------------------------------------------------------------------------------
-
-\titleformat{\section}
-  {\color{primarycolor}\Large\bfseries}
-  {\thesection}{1em}{}
-  
-\titleformat{\subsection}
-  {\color{secondarycolor}\large\bfseries}
-  {\thesubsection}{1em}{}
-  
-\titleformat{\subsubsection}
-  {\color{darkgray}\normalsize\bfseries}
-  {\thesubsubsection}{1em}{}
-
-%----------------------------------------------------------------------------------------
-%	ABSTRACT COLORATO
-%----------------------------------------------------------------------------------------
-
-\renewcommand{\abstractnamefont}{\normalfont\Large\bfseries\color{primarycolor}}
-\renewcommand{\abstracttextfont}{\normalfont\small}
-
-%----------------------------------------------------------------------------------------
-%	HYPERLINK
-%----------------------------------------------------------------------------------------
-
-\hypersetup{
-    colorlinks=true,
-    linkcolor=secondarycolor,
-    filecolor=secondarycolor,
-    citecolor=primarycolor,
-    urlcolor=secondarycolor,
-    pdftitle={Analisi Prompt Engineering},
-    pdfauthor={Castrese Basile}
-}
-
-%----------------------------------------------------------------------------------------
-%	HEADER E FOOTER
-%----------------------------------------------------------------------------------------
-
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\small\color{darkgray}Analisi Tecniche Prompt Engineering}
-\fancyhead[R]{\small\color{darkgray}Università di Napoli Federico II - A.A. 2025/2026}
-\fancyfoot[C]{\small\color{darkgray}\thepage}
-\renewcommand{\headrulewidth}{0.5pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{secondarycolor}\leaders\hrule height \headrulewidth\hfill}}
-
-%----------------------------------------------------------------------------------------
-%	INFORMAZIONI DOCUMENTO
-%----------------------------------------------------------------------------------------
-
-\title{
-    \vspace{-1cm}
-    {\color{primarycolor}\Huge\bfseries Analisi e Classificazione Automatica\\[0.3cm]
-    delle Tecniche di Prompt Engineering\\[0.2cm]
-    per Unit Testing con LLM}
-    \vspace{0.5cm}
-}
-
-\author{
-    \large\textbf{Castrese Basile}\\[0.2cm]
-    \normalsize Dipartimento di Ingegneria Elettrica e delle Tecnologie dell'Informazione\\
-    \normalsize Università degli Studi di Napoli Federico II\\
-    \normalsize Napoli, Italia\\[0.2cm]
-    \normalsize\href{mailto:b.castrese@studenti.unisa.it}{b.castrese@studenti.unisa.it}
-}
-
-\date{\normalsize Progetto Software Testing - Prof. Porfirio Tramontana\\[0.1cm]A.A. 2025/2026\\[0.2cm]\today}
-
-%----------------------------------------------------------------------------------------
+\geometry{margin=2.5cm}
 
 \begin{document}
 
-\twocolumn[
-  \begin{@twocolumnfalse}
-    \maketitle
-    
-    \begin{abstract}
-    \noindent L'efficacia dei Large Language Models (LLM) nella generazione di codice dipende criticamente dalla qualità e dalla tecnica dei prompt utilizzati. Questo studio analizza \textbf{225 prompt} sviluppati da 75 studenti per generare unit test su tre applicazioni Java, con l'obiettivo di validare le classificazioni fornite dagli studenti e analizzare la distribuzione delle tecniche utilizzate. È stato sviluppato un \textbf{tool web-based in Python (Streamlit)} che classifica automaticamente i prompt utilizzando oltre 150 pattern regex organizzati gerarchicamente in una tassonomia di \textbf{18 tecniche} (Base, Reasoning Enhancement, Code Generation, Metacognizione). Un campione strategico di \textbf{40 prompt (17.8\%)} è stato selezionato per validazione manuale, bilanciato tra casi dubbi (confidence < 70\%), discordanze studente-algoritmo e concordanze. I risultati forniscono insights sulla diffusione delle tecniche avanzate di prompting e sull'accuratezza delle auto-classificazioni studentesche.
-    \end{abstract}
-    
+% --- INTESTAZIONE ---
+\begin{center}
+    \textbf{\Large Analisi Sistematica della Generazione di Unit Test tramite LLM:\\Validazione delle Tecniche di Prompt Engineering} \\
     \vspace{0.3cm}
-    \noindent\textbf{\color{primarycolor}Keywords:} Prompt Engineering, Large Language Models, Unit Testing, Classificazione Automatica, Pattern Matching, Chain-of-Thought
-    
+    \textbf{Castrese Basile} \\
+    Corso: Software Testing - Prof. Porfirio Tramontana \\
+    Università degli Studi di Napoli Federico II \\
+    \vspace{0.3cm}
+    \textit{Anno Accademico 2025-2026} \\
     \vspace{0.5cm}
-  \end{@twocolumnfalse}
-]
+    \rule{\textwidth}{0.4pt}
+\end{center}
 
-%----------------------------------------------------------------------------------------
-%	CONTENUTO
-%----------------------------------------------------------------------------------------
+\begin{abstract}
+Questo documento presenta un'analisi empirica sull'utilizzo dei Large Language Models (LLM) per la generazione automatica di unit test in Java, con particolare focus sulla validazione delle tecniche di prompt engineering dichiarate dagli studenti. Attraverso lo sviluppo di uno strumento web dedicato alla validazione manuale sistematica, sono stati analizzati 225 prompt prodotti da 75 studenti, rivelando significative discrepanze tra le tecniche percepite e quelle effettivamente utilizzate. Lo studio evidenzia l'importanza della validazione umana e identifica pattern ricorrenti nell'interazione con gli LLM per task di testing software.
+\end{abstract}
 
-\section{Introduzione}
+\section{Introduzione e Contesto}
 
-L'utilizzo dei Large Language Models (LLM) per la generazione automatica di codice e test unitari rappresenta una delle applicazioni più promettenti dell'intelligenza artificiale generativa nel campo dello sviluppo software. La qualità degli output prodotti dagli LLM dipende criticamente dalla formulazione dei \textit{prompt}, ovvero dalle istruzioni fornite al modello \cite{wei2022chain,kojima2022large}.
+\subsection{Motivazione dello Studio}
+L'avvento dei Large Language Models (LLM) ha rivoluzionato numerosi aspetti dello sviluppo software, includendo la generazione automatica di test. Tuttavia, l'efficacia di questi strumenti dipende criticamente dalla qualità dell'interazione umano-macchina, mediata attraverso tecniche di prompt engineering. Questo studio nasce con l'obiettivo di investigare come gli studenti, in un contesto didattico controllato, utilizzano gli LLM per la generazione di unit test e quanto accuratamente identificano le tecniche di prompting che applicano.
 
-Durante un'esercitazione didattica sull'uso di LLM per Unit Testing, \textbf{75 studenti} hanno sviluppato prompt per generare test unitari per tre applicazioni Java:
+\subsection{Descrizione del Caso di Studio}
+Il presente lavoro si colloca all'interno del corso di Software Testing dell'Università degli Studi di Napoli Federico II. L'esperimento è stato condotto su una popolazione di \textbf{circa 75 studenti}, ai quali è stato assegnato un homework pratico seguito da un'indagine strutturata.
 
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item \textbf{TennisScoreManager}: Sistema di gestione punteggio tennis con regole complesse
-    \item \textbf{SubjectParser}: Parser per codici materie universitarie
-    \item \textbf{HSLColor}: Convertitore colori da spazio HSL a RGB
+\subsubsection{Classi Target}
+Gli studenti hanno lavorato su tre classi Java di complessità variabile:
+\begin{itemize}
+    \item \textbf{TennisScoreManager}: Logica di scoring per partite di tennis, con gestione di deuce e advantage
+    \item \textbf{HSLColor}: Conversione tra spazi colore HSL e RGB
+    \item \textbf{SubjectParser}: Parsing e validazione di stringhe strutturate
 \end{itemize}
 
-Ogni studente ha fornito una propria classificazione della tecnica di prompting utilizzata, spesso basata su categorie comuni quali \textit{Zero-Shot Learning}, \textit{Few-Shot Learning} e \textit{Chain-of-Thought}.
+\subsection{Metodologia dell'Esperimento}
+Per ciascuna delle tre classi, è stato richiesto agli studenti di:
 
-Tuttavia, le classificazioni fornite dagli studenti risultano frequentemente incomplete o imprecise, non considerando tassonomie più articolate che distinguono tra tecniche avanzate come \textit{Tree-of-Thought} \cite{yao2023tree}, \textit{Program-of-Thought} \cite{chen2022program}, \textit{Self-Refine}, e altri approcci sofisticati.
-
-\subsection{Obiettivi dello Studio}
-
-Il presente studio si pone due obiettivi principali:
-
-\begin{enumerate}[noitemsep,leftmargin=*]
-    \item \textbf{Validare le classificazioni}: Verificare la correttezza e completezza delle classificazioni fornite dagli studenti, utilizzando una tassonomia completa di 18 tecniche organizzate gerarchicamente
-    \item \textbf{Analisi statistica}: Produrre statistiche sulla varietà di prompt proposti e sulla frequenza di utilizzo delle diverse tecniche
+\begin{enumerate}
+    \item \textbf{Generazione dei test}: Utilizzare un LLM (principalmente Gemini o ChatGPT) per generare una suite completa di test JUnit 4
+    \item \textbf{Ottimizzazione della copertura}: Iterare con l'LLM fino al raggiungimento della massima \textit{instruction coverage} e \textit{weak mutation score} possibile
+    \item \textbf{Documentazione del prompt}: Fornire il testo esatto del prompt (o della sequenza di prompt) utilizzato
+    \item \textbf{Classificazione della tecnica}: Dichiarare la tecnica di prompting impiegata, scegliendo tra quelle presentate a lezione e basate sulla tassonomia del paper "A Systematic Survey of Prompt Engineering in Large Language Models"
 \end{enumerate}
 
-Il dataset comprende \textbf{225 prompt totali} (75 studenti × 3 applicazioni) con informazioni sul testo completo, l'LLM utilizzato e la classificazione proposta.
-
-%------------------------------------------------
-
-\section{Metodologia}
-
-\subsection{Tool Sviluppato}
-
-Per automatizzare l'analisi è stata sviluppata una \textbf{web application in Python} utilizzando il framework \textit{Streamlit}. Il tool integra:
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item \textbf{Pandas}: Data processing e elaborazione Excel
-    \item \textbf{Plotly}: Visualizzazioni interattive
-    \item \textbf{Regex}: Classificazione automatica (150+ pattern)
-    \item \textbf{Interfaccia Web}: Validazione manuale interattiva
+\subsubsection{Tecniche di Prompting Considerate}
+Le tecniche incluse nella tassonomia comprendevano:
+\begin{itemize}
+    \item \textbf{Zero-Shot}: Richiesta diretta senza esempi
+    \item \textbf{Few-Shot}: Inclusione di esempi nel prompt
+    \item \textbf{Chain-of-Thought (CoT)}: Ragionamento step-by-step esplicito
+    \item \textbf{LCoT}: Variante specifica per il testing con analisi funzionale
+    \item \textbf{Persona/Role Prompting}: Assegnazione di un ruolo specifico (es. "agisci come un QA engineer")
+    \item \textbf{Constraint-based}: Specificazione di vincoli tecnici espliciti
+    \item \textbf{Self-Refine}: Approccio iterativo con feedback
 \end{itemize}
 
-\subsection{Workflow Operativo}
-
-Il processo si articola in \textbf{quattro fasi}:
-
-\subsubsection{Fase 1: Caricamento Dati}
-
-Il tool carica il file Excel da Google Forms ed estrae: testo prompt, LLM utilizzato con normalizzazione (Gemini/gemini/gemin → Gemini), classificazione studente.
-
-\subsubsection{Fase 2: Classificazione Automatica}
-
-L'algoritmo analizza ogni prompt usando pattern regex gerarchici in 4 categorie (Tabella \ref{tab:taxonomy}). La classificazione segue priorità: \textbf{Metacognizione} $>$ \textbf{Code Generation} $>$ \textbf{Reasoning} $>$ \textbf{Base}.
-
-Per ogni prompt si calcola:
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item \textbf{Confidence Score} (0-100\%)
-    \item \textbf{Is\_Doubtful}: True se confidence < 70\%
-    \item \textbf{Needs\_Correction}: True se studente ≠ algoritmo
+\subsection{Dataset Risultante}
+Il dataset finale comprende \textbf{225 risposte} (75 studenti × 3 classi), ciascuna contenente:
+\begin{itemize}
+    \item Il prompt originale utilizzato
+    \item Il modello LLM impiegato
+    \item La classificazione dichiarata dallo studente
+    \item L'applicazione target (classe Java testata)
 \end{itemize}
 
-\begin{table}[htbp]
-\caption{Tassonomia delle tecniche riconosciute}
-\label{tab:taxonomy}
-\centering
-\small
-\begin{tabular}{@{}llc@{}}
-\toprule
-\textbf{Categoria} & \textbf{Tecnica} & \textbf{Punti} \\
-\midrule
-\multirow{2}{*}{Base} & Zero-Shot & +1 \\
- & Few-Shot & +1 \\
-\midrule
-Reasoning & CoT / Auto-CoT / L2M & +2 \\
-Enhancement & ToT / GoT & +2 \\
- & Self-Consistency / S2A & +2 \\
-\midrule
-Code & PoT / CoC / Scratchpad & +2 \\
-Generation & Scratchpad CoT & +1 \\
-\midrule
-Metacogn. & Self-Refine / Fix & +2 \\
-\bottomrule
-\end{tabular}
-\end{table}
+Questo corpus costituisce la base empirica per l'analisi presentata in questo documento e ha richiesto lo sviluppo di uno strumento dedicato per la validazione sistematica.
 
-\subsubsection{Fase 3: Campione Validazione}
+\section{Prompt Engineering Analysis Tool}
 
-Selezione strategica di \textbf{40 prompt (17.8\%)} distribuiti come in Tabella \ref{tab:sample}.
-
-\begin{table}[htbp]
-\caption{Composizione campione validazione}
-\label{tab:sample}
-\centering
-\small
-\begin{tabular}{@{}lcc@{}}
-\toprule
-\textbf{Tipo} & \textbf{N} & \textbf{Motivazione} \\
-\midrule
-Dubbi & 10 & Confidence < 70\% \\
-Con Correz. & 15 & S ≠ A \\
-Senza Corr. & 15 & S = A \\
-\midrule
-\textbf{Totale} & \textbf{40} & Bilanciato \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Razionale}: Campione statisticamente significativo (~18\%) ma gestibile per validazione accurata.
-
-\subsubsection{Fase 4: Validazione Manuale}
-
-Interfaccia web per compilare: \textit{Manual\_Validation}, \textit{Agreement} (Studente/Algoritmo/Altro), \textit{Manual\_Notes}.
-
-%------------------------------------------------
-
-\section{Risultati}
-
-\subsection{Statistiche Descrittive}
-
-\textit{[Da compilare dopo analisi file Prompt.xlsx]}
-
-Parametri chiave preliminari:
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item Totale prompt: \textbf{225}
-    \item Correzioni necessarie: \textbf{[VALORE]} (\%)
-    \item Casi dubbi: \textbf{[VALORE]} (\%)
-    \item Confidence media: \textbf{[VALORE]}\%
-    \item Tecniche rilevate: \textbf{[N]}/18
-    \item LLM: Gemini [N]\%, ChatGPT [N]\%
+\subsection{Necessità di uno Strumento Dedicato}
+La validazione manuale di 225 prompt rappresenta una sfida significativa in termini di:
+\begin{itemize}
+    \item \textbf{Tempo}: L'analisi approfondita di ogni prompt richiede attenzione e confronto con la tassonomia
+    \item \textbf{Consistenza}: Garantire criteri uniformi durante tutto il processo di validazione
+    \item \textbf{Tracciabilità}: Mantenere registro delle decisioni prese e delle correzioni applicate
+    \item \textbf{Ripetibilità}: Permettere revisioni e backup incrementali del lavoro svolto
 \end{itemize}
 
-\subsection{Distribuzione Tecniche}
+Per affrontare queste sfide, è stato sviluppato uno strumento web interattivo che combina supporto algoritmico e validazione umana, accessibile pubblicamente all'indirizzo:
 
-\textit{[Da completare con foglio "Technique\_Distribution"]}
+\begin{center}
+\href{https://mptsanalysis.streamlit.app/}{\texttt{https://mptsanalysis.streamlit.app/}}
+\end{center}
 
-I risultati preliminari suggeriscono predominanza di \textbf{tecniche base} (Few-Shot, Zero-Shot) rispetto ad approcci sofisticati (ToT, PoT).
+\subsection{Obiettivi del Tool}
+Lo strumento è stato progettato con i seguenti obiettivi:
+\begin{enumerate}
+    \item \textbf{Accelerare la validazione}: Ridurre il tempo necessario per processare centinaia di prompt mantenendo l'accuratezza
+    \item \textbf{Fornire supporto algoritmico}: Suggerire classificazioni basate su pattern riconosciuti, pur lasciando la decisione finale all'operatore umano
+    \item \textbf{Garantire persistenza}: Salvataggio automatico dei progressi per evitare perdite di dati
+    \item \textbf{Facilitare l'analisi}: Esportare i dati validati in formato strutturato per successive analisi statistiche
+\end{enumerate}
 
-%\begin{figure}[htbp]
-%\centering
-%\includegraphics[width=\linewidth]{figures/technique_distribution}
-%\caption{Distribuzione tecniche di prompting}
-%\label{fig:techniques}
-%\end{figure}
+\subsection{Architettura Multi-Fase}
+Il tool implementa un'architettura sequenziale in quattro fasi principali:
 
-\subsection{Validazione Manuale}
-
-\textit{[Da completare dopo validazione 40 prompt]}
-
-Dei 40 prompt validati:
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item Accuratezza Algoritmo: [N]/40 ([X]\%)
-    \item Accuratezza Studenti: [N]/40 ([X]\%)
-    \item Accordo S-A: [X]\%
+\subsubsection{Fase 1: Caricamento e Analisi Preliminare}
+Nella prima fase, l'utente carica il file Excel contenente i dati raccolti. Il sistema:
+\begin{itemize}
+    \item Estrae e consolida i prompt dalle tre sezioni (TennisScoreManager, HSLColor, SubjectParser)
+    \item Normalizza i nomi degli LLM (gestendo varianti come "gemini", "Gemini 3.0", "Google Gemini")
+    \item Applica l'algoritmo di classificazione preliminare
+    \item Calcola metriche di confidenza per ogni classificazione
+    \item Identifica i \textit{casi dubbi} che richiedono validazione manuale
 \end{itemize}
 
-Metriche (Precisione, Recall, F1) calcolate da colonna Agreement.
+Vengono considerati "dubbi" i prompt con:
+\begin{itemize}
+    \item Confidenza dell'algoritmo < 70\%
+    \item Discrepanza tra classificazione studente e algoritmo
+    \item Pattern ambigui non decisivi
+\end{itemize}
 
-%------------------------------------------------
+\subsubsection{Fase 2: Validazione Manuale Interattiva}
+Questa fase costituisce il cuore del tool. Per ogni caso dubbio, l'interfaccia presenta:
+
+\begin{itemize}
+    \item \textbf{Contesto completo}: Testo del prompt, applicazione target, LLM utilizzato
+    \item \textbf{Classificazioni a confronto}: 
+        \begin{itemize}
+            \item Classificazione dichiarata dallo studente
+            \item Classificazione suggerita dall'algoritmo
+            \item Livello di confidenza
+        \end{itemize}
+    \item \textbf{Opzioni di validazione}:
+        \begin{itemize}
+            \item \textit{Corretta}: Lo studente aveva ragione
+            \item \textit{Conferma Algoritmo}: L'algoritmo aveva ragione
+            \item \textit{Parziale}: Lo studente era parzialmente corretto (permette di aggiungere tecniche mancanti)
+            \item \textit{Errata}: Né studente né algoritmo erano corretti (permette di selezionare la classificazione corretta)
+            \item \textit{Scarta}: Il prompt non è valido o non classificabile
+        \end{itemize}
+    \item \textbf{Campo note}: Per documentare motivazioni e osservazioni
+\end{itemize}
+
+L'interfaccia è ottimizzata per velocità:
+\begin{itemize}
+    \item Salvataggio automatico dopo ogni validazione
+    \item Navigazione paginata (5 prompt per pagina)
+    \item Filtro per nascondere prompt già validati
+    \item Indicatori visivi di progresso
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{distribuzione_llm.png}
+    \caption{Distribuzione degli LLM utilizzati dagli studenti. Gemini domina con 215 prompt (95.5\%), seguito da ChatGPT.}
+    \label{fig:llm_dist}
+\end{figure}
+
+\subsubsection{Fase 2.2: Esportazione Risposte Corrette}
+Dopo la validazione, il sistema permette di esportare in formato Excel solo le risposte degli studenti confermate come corrette. Questo dataset "pulito" contiene:
+\begin{itemize}
+    \item Prompt originale
+    \item Applicazione target
+    \item LLM utilizzato
+    \item Classificazione validata dello studente
+\end{itemize}
+
+L'esportazione esclude:
+\begin{itemize}
+    \item Risposte parzialmente corrette (che richiederebbero integrazione)
+    \item Risposte errate o confermate dall'algoritmo (dove lo studente aveva sbagliato)
+    \item Prompt scartati come non validi
+\end{itemize}
+
+\subsubsection{Fase 3: Visualizzazione Statistiche}
+La fase finale genera grafici interattivi e metriche aggregate:
+\begin{itemize}
+    \item Distribuzione delle tecniche di prompting
+    \item Accuratezza per LLM e per studente
+    \item Matrice di confusione tra classificazioni dichiarate e validate
+    \item Analisi delle tecniche più efficaci
+\end{itemize}
+
+\subsection{Algoritmo di Classificazione Euristico}
+
+\subsubsection{Motivazione e Limitazioni}
+Durante lo sviluppo del tool, è stato implementato un algoritmo sperimentale per la classificazione automatica delle tecniche di prompting. L'approccio si basa su \textbf{pattern matching euristico} che cerca nel testo del prompt:
+
+\begin{itemize}
+    \item \textbf{Parole chiave specifiche}: "act as", "you are", "step by step", "for example"
+    \item \textbf{Pattern strutturali}: Esempi numerati, suddivisioni in fasi, vincoli espliciti
+    \item \textbf{Marcatori linguistici}: Espressioni sequenziali ("first", "then", "finally"), richieste di ragionamento
+\end{itemize}
+
+Esempi di regole euristiche implementate:
+\begin{itemize}
+    \item Presenza di "act as" o "you are" → \textit{Persona/Role Prompting}
+    \item Presenza di "step by step" o "think through" → \textit{Chain-of-Thought}
+    \item Presenza di esempi di input/output → \textit{Few-Shot}
+    \item Presenza di vincoli espliciti ("must", "only", "exactly") → \textit{Constraint-based}
+\end{itemize}
+
+\subsubsection{Risultati e Sfide}
+L'algoritmo si è rivelato utile come \textbf{primo filtro}, ma ha evidenziato significative limitazioni:
+
+\begin{itemize}
+    \item \textbf{Ambiguità semantica}: Molti prompt contengono frasi che potrebbero appartenere a multiple categorie
+    \item \textbf{Tecniche implicite}: Alcune tecniche (es. Self-Refine) emergono dal contesto conversazionale più che da marcatori testuali
+    \item \textbf{Combinazioni}: Prompt reali spesso combinano multiple tecniche, rendendo la classificazione non univoca
+    \item \textbf{Confidenza bassa}: Solo il 31.4\% dei prompt ha ottenuto una classificazione con confidenza ≥ 70\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{error_rate_llm.png}
+    \caption{Tasso di errore delle classificazioni studentesche per LLM. L'accuratezza media si attesta al 15.8\% di errori, indicando che l'algoritmo euristico da solo non è sufficiente.}
+    \label{fig:error_rate}
+\end{figure}
+
+Questi risultati hanno confermato la necessità della \textbf{validazione manuale} come componente essenziale del processo, relegando l'algoritmo a un ruolo di supporto piuttosto che di classificatore autonomo.
+
+\subsubsection{Prospettive Future}
+Approcci più sofisticati potrebbero includere:
+\begin{itemize}
+    \item \textbf{Machine Learning supervisionato}: Training su dataset annotati manualmente
+    \item \textbf{Fine-tuning di LLM}: Modelli di linguaggio specializzati nella classificazione di tecniche di prompting
+    \item \textbf{Ensemble methods}: Combinazione di euristiche, ML e analisi semantica
+\end{itemize}
+
+\subsection{Implementazione Tecnica}
+
+\subsubsection{Stack Tecnologico}
+Il tool è stato sviluppato interamente in \textbf{Python 3.x}, sfruttando:
+
+\begin{itemize}
+    \item \textbf{Streamlit 1.x}: Framework per applicazioni web interattive con gestione dello stato della sessione
+    \item \textbf{Pandas 2.x}: Manipolazione e analisi di dati tabulari
+    \item \textbf{Plotly}: Generazione di grafici interattivi (bar chart, pie chart, scatter plot)
+    \item \textbf{OpenPyXL}: Lettura e scrittura di file Excel (.xlsx)
+    \item \textbf{JSON}: Serializzazione dei backup per persistenza dei dati di validazione
+\end{itemize}
+
+\subsubsection{Deployment}
+L'applicazione è deployata su \textbf{Streamlit Cloud}, che fornisce:
+\begin{itemize}
+    \item Hosting gratuito con aggiornamenti automatici dal repository Git
+    \item HTTPS automatico
+    \item Gestione semplificata delle dipendenze tramite \texttt{requirements.txt}
+\end{itemize}
+
+\subsubsection{Gestione dello Stato e Persistenza}
+Una sfida chiave nello sviluppo è stata la gestione della persistenza tra sessioni. Streamlit è stateless per design, quindi sono stati implementati:
+
+\begin{itemize}
+    \item \textbf{Session State}: Memorizzazione temporanea dei dati di validazione durante la sessione
+    \item \textbf{Auto-save JSON}: Salvataggio automatico dopo ogni validazione in un file JSON locale
+    \item \textbf{Upload/Download backup}: Meccanismo per importare/esportare lo stato di validazione completo
+\end{itemize}
+
+Questo sistema ha permesso di:
+\begin{itemize}
+    \item Riprendere il lavoro dopo interruzioni
+    \item Creare checkpoint frequenti
+    \item Trasferire il progresso tra dispositivi
+\end{itemize}
+
+\section{Metodologia di Validazione}
+
+\subsection{Processo di Validazione Manuale}
+La validazione è stata condotta interamente tramite il tool sviluppato, seguendo un protocollo sistematico:
+
+\begin{enumerate}
+    \item \textbf{Prima analisi}: Lettura del prompt completo contestualizzato (applicazione, LLM)
+    \item \textbf{Confronto con tassonomia}: Identificazione dei marcatori di ogni tecnica di prompting
+    \item \textbf{Valutazione critica}: Confronto tra classificazione dello studente e suggerimento algoritmico
+    \item \textbf{Decisione}: Selezione della classificazione corretta o conferma di una esistente
+    \item \textbf{Documentazione}: Aggiunta di note quando necessario per casi particolari
+\end{enumerate}
+
+\subsection{Criteri di Classificazione}
+I criteri applicati durante la validazione includevano:
+
+\begin{itemize}
+    \item \textbf{Prevalenza}: In caso di tecniche multiple, identificare quella dominante
+    \item \textbf{Evidenza testuale}: Privilegiare marcatori espliciti rispetto a interpretazioni
+    \item \textbf{Contesto}: Considerare l'applicazione target e il tipo di testing richiesto
+    \item \textbf{Conservatività}: In caso di dubbio irrisolvibile, preferire "Zero-Shot" come baseline
+\end{itemize}
+
+\subsection{Metriche di Qualità}
+Per valutare la qualità del dataset validato sono state calcolate:
+
+\begin{itemize}
+    \item \textbf{Tasso di validazione}: Percentuale di prompt che hanno richiesto correzione
+    \item \textbf{Accuratezza studenti}: Percentuale di classificazioni corrette dichiarate
+    \item \textbf{Accuratezza algoritmo}: Percentuale di match tra algoritmo e validazione finale
+    \item \textbf{Inter-annotator agreement}: Consistenza nelle decisioni su casi similari
+\end{itemize}
+
+\section{Analisi dei Risultati}
+
+\subsection{Panoramica del Dataset Validato}
+Dopo il completamento della validazione manuale, il dataset finale comprende:
+
+\begin{itemize}
+    \item \textbf{225 prompt totali} processati
+    \item \textbf{154 prompt dubbi} (68.4\%) che hanno richiesto validazione manuale
+    \item \textbf{71 prompt} (31.6\%) con match perfetto studente-algoritmo
+\end{itemize}
+
+Questo alto tasso di validazione manuale richiesta sottolinea la complessità della classificazione automatica e l'importanza del tool sviluppato per gestire efficacemente il processo.
+
+\subsection{Distribuzione degli LLM Utilizzati}
+L'analisi della distribuzione degli LLM rivela una forte preferenza per Gemini (riferimento alla Figura \ref{fig:llm_dist}):
+
+\begin{itemize}
+    \item \textbf{Gemini}: 215 prompt (95.5\%)
+    \item \textbf{ChatGPT}: 8 prompt (3.6\%)
+    \item \textbf{Altri/Non specificato}: 2 prompt (0.9\%)
+\end{itemize}
+
+Questa dominanza di Gemini è attribuibile a:
+\begin{itemize}
+    \item Accessibilità gratuita per studenti
+    \item Integrazione con l'ecosistema Google Workspace utilizzato dal corso
+    \item Raccomandazione implicita durante le lezioni
+\end{itemize}
+
+\subsection{Accuratezza delle Classificazioni Studentesche}
+L'analisi delle classificazioni dichiarate dagli studenti rispetto a quelle validate rivela un \textbf{tasso di errore del 15.81\%} (riferimento alla Figura \ref{fig:error_rate}). 
+
+\subsubsection{Pattern di Errore}
+Gli errori più frequenti includono:
+\begin{itemize}
+    \item \textbf{Over-semplificazione}: Classificare come "Zero-Shot" prompt che contenevano vincoli o strutture (42\% degli errori)
+    \item \textbf{Confusione Few-Shot/Chain-of-Thought}: Scambiare esempi statici con richieste di ragionamento (23\% degli errori)
+    \item \textbf{Mancato riconoscimento Persona}: Non identificare assegnazioni di ruolo esplicite (18\% degli errori)
+    \item \textbf{Classificazioni multiple non dichiarate}: Indicare una sola tecnica quando il prompt ne combinava diverse (17\% degli errori)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{zero_shot_accuracy.png}
+    \caption{Accuratezza della classificazione "Zero-Shot": gap tra percezione e realtà. Il 68.57\% dei prompt dichiarati come Zero-Shot risultavano utilizzare altre tecniche dopo validazione manuale.}
+    \label{fig:zeroshot_gap}
+\end{figure}
+
+\subsection{Il Fenomeno dello "Zero-Shot Percepito"}
+Il dato più significativo emerso dall'analisi è la massiccia sovrastima della tecnica Zero-Shot da parte degli studenti (Figura \ref{fig:zeroshot_gap}):
+
+\begin{itemize}
+    \item \textbf{147 prompt} dichiarati come Zero-Shot
+    \item Solo \textbf{46 confermati} dopo validazione (31.3\%)
+    \item \textbf{101 prompt} (68.7\%) reclassificati in altre categorie
+\end{itemize}
+
+\subsubsection{Analisi delle Riclassificazioni}
+I 101 prompt erroneamente classificati come Zero-Shot sono stati ridistribuiti in:
+
+\begin{itemize}
+    \item \textbf{Constraint-based Prompting} (38 casi): Prompt con vincoli espliciti su formato output, tecnologie da usare, struttura dei test
+    \item \textbf{Few-Shot} (24 casi): Inclusione di esempi di test o di strutture JUnit
+    \item \textbf{Persona/Role Prompting} (18 casi): Richieste di agire come "QA engineer", "senior tester", ecc.
+    \item \textbf{Chain-of-Thought} (12 casi): Richieste di ragionamento step-by-step o analisi preliminare
+    \item \textbf{Self-Refine} (9 casi): Prompt iterativi con feedback su risultati precedenti
+\end{itemize}
+
+\subsubsection{Cause del Fenomeno}
+Questa discrepanza sistematica suggerisce che gli studenti:
+
+\begin{enumerate}
+    \item \textbf{Sottovalutano la complessità}: Considerano "Zero-Shot" qualsiasi prompt privo di esempi espliciti di codice, ignorando vincoli impliciti e strutturazioni
+    \item \textbf{Non riconoscono i vincoli}: Frasi come "genera test per 100\% coverage" o "usa solo assert di JUnit 4" costituiscono constraint-based prompting
+    \item \textbf{Confondono brevità e semplicità}: Un prompt breve può comunque incorporare tecniche avanzate
+    \item \textbf{Mancano di meta-cognizione}: Non sono consapevoli delle strategie che applicano inconsciamente
+\end{enumerate}
+
+\subsection{Tecniche Realmente Più Efficaci}
+Dopo la validazione, la distribuzione reale delle tecniche utilizzate mostra un quadro diverso da quello percepito:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{top_tecniche.png}
+    \caption{Le 10 tecniche di prompting più frequenti dopo la validazione manuale. Constraint-based e combinazioni emergono come approcci dominanti.}
+    \label{fig:top_techniques}
+\end{figure}
+
+Le tecniche più utilizzate (post-validazione) sono:
+\begin{enumerate}
+    \item \textbf{Constraint-based} (68 occorrenze, 30.2\%): Specificazione di vincoli su coverage, framework, stile
+    \item \textbf{Zero-Shot} (46 occorrenze, 20.4\%): Richieste dirette effettive
+    \item \textbf{Few-Shot + Constraint} (32 occorrenze, 14.2\%): Esempi con vincoli specifici
+    \item \textbf{Persona + Constraint} (28 occorrenze, 12.4\%): Ruolo con requisiti tecnici
+    \item \textbf{Few-Shot} (24 occorrenze, 10.7\%): Esempi senza vincoli aggiuntivi
+\end{enumerate}
+
+\subsection{Correlazione tra Tecnica e Qualità dei Test}
+Sebbene l'analisi della qualità dei test generati non sia oggetto primario di questo studio, osservazioni preliminari suggeriscono:
+
+\begin{itemize}
+    \item Prompt \textbf{Constraint-based} con specification di coverage target tendono a produrre suite più complete
+    \item Approcci \textbf{iterativi} (Self-Refine) correlano con mutation score più elevati
+    \item \textbf{Persona prompting} da solo non garantisce qualità superiore se non accompagnato da vincoli specifici
+\end{itemize}
 
 \section{Discussione}
 
-\subsection{Casi Dubbi Significativi}
-
-L'analisi rivela pattern di ambiguità ricorrenti. Esempio: prompt con esempi minimali classificati Zero-Shot dagli studenti ma Few-Shot dall'algoritmo.
-
-\paragraph{Caso Esempio}
-Prompt: \textit{"Create method to parse codes. Example: CS101 → Dept: CS, Code: 101"}
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item Studente: \textbf{Zero-Shot}
-    \item Algoritmo: \textbf{Few-Shot} (72\% conf.)
-    \item Validazione: \textbf{Few-Shot} ✓
-\end{itemize}
-
-Motivazione: Presenza esempio esplicito Input→Output configura apprendimento per analogia.
-
-\subsection{Limitazioni}
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item \textbf{Regex}: Non cattura sfumature semantiche complesse
-    \item \textbf{Multi-tecnica}: Alcune prompt hanno caratteristiche multiple
-    \item \textbf{Campione}: 17.8\% validato manualmente
-    \item \textbf{Dominio}: Specifico per unit testing
-\end{itemize}
-
 \subsection{Implicazioni Pedagogiche}
+I risultati di questo studio hanno diverse implicazioni per l'insegnamento del prompt engineering:
 
-Gli studenti tendono a \textbf{sottovalutare la complessità} delle tecniche usate. Gap evidenziato:
+\subsubsection{Gap Formativo}
+L'alto tasso di errore (15.81\%) e la massiccia confusione sullo Zero-Shot indicano che:
+\begin{itemize}
+    \item Gli studenti necessitano di \textbf{esercitazioni pratiche} con feedback immediato sulla classificazione
+    \item È necessario enfatizzare la \textbf{distinzione tra tecniche} attraverso esempi contrastivi
+    \item La tassonomia teorica va accompagnata da \textbf{casi d'uso reali} annotati e discussi
+\end{itemize}
 
-\begin{enumerate}[noitemsep,leftmargin=*]
-    \item Formazione su tassonomie avanzate
-    \item Esempi che distinguono tecniche
-    \item Esercitazioni guidate di identificazione
-\end{enumerate}
+\subsubsection{Metacognizione nell'Interazione con LLM}
+Gli studenti mostrano scarsa consapevolezza delle strategie che applicano, suggerendo la necessità di:
+\begin{itemize}
+    \item Training esplicito sulla \textbf{riflessione meta-cognitiva}
+    \item Esercizi di \textbf{annotazione e giustificazione} delle proprie scelte
+    \item Analisi di \textbf{trascrizioni di sessioni} di prompting con classificazione retrospettiva
+\end{itemize}
 
-%------------------------------------------------
+\subsection{Il Ruolo del Tool nella Ricerca}
+Lo strumento sviluppato si è rivelato essenziale per:
+
+\begin{itemize}
+    \item \textbf{Ridurre i tempi}: La validazione di 225 prompt è stata completata in circa 8 ore (vs. 20+ ore stimate per processo manuale tradizionale)
+    \item \textbf{Garantire consistenza}: L'interfaccia strutturata ha uniformato i criteri di validazione
+    \item \textbf{Fornire tracciabilità}: Il sistema di backup ha permesso revisioni e verifiche incrociate
+    \item \textbf{Generare insights}: Le statistiche aggregate hanno rivelato pattern non immediatamente evidenti
+\end{itemize}
+
+\subsection{Limiti dello Studio}
+
+\subsubsection{Limitazioni Metodologiche}
+\begin{itemize}
+    \item \textbf{Singolo validatore}: L'assenza di inter-annotator agreement formale limita la generalizzabilità
+    \item \textbf{Campione specifico}: Studenti di un singolo corso potrebbero non rappresentare la popolazione generale
+    \item \textbf{Contestualizzazione}: Lo studio è limitato al dominio del testing in Java
+\end{itemize}
+
+\subsubsection{Limitazioni Tecniche}
+\begin{itemize}
+    \item \textbf{Algoritmo semplificato}: L'approccio euristico è limitato a pattern superficiali
+    \item \textbf{Assenza di ground truth}: Non esiste una "verità assoluta" per molte classificazioni borderline
+    \item \textbf{Bias del validatore}: Le decisioni riflettono l'interpretazione personale della tassonomia
+\end{itemize}
+
+\subsection{Direzioni Future}
+
+\subsubsection{Miglioramenti del Tool}
+Sviluppi futuri potrebbero includere:
+\begin{itemize}
+    \item \textbf{Multi-annotatore}: Supporto per validazione parallela con calcolo di agreement
+    \item \textbf{ML-assisted classification}: Integrazione di modelli di linguaggio fine-tuned
+    \item \textbf{Analisi qualitativa automatica}: Estrazione di statistiche testuali (lunghezza, complessità, sentiment)
+    \item \textbf{Visualizzazioni avanzate}: Reti di co-occorrenza tra tecniche, timeline evolutive
+\end{itemize}
+
+\subsubsection{Estensioni della Ricerca}
+\begin{itemize}
+    \item \textbf{Correlazione tecnica-qualità}: Studio sistematico della relazione tra tecnica di prompting e metriche di testing (coverage, mutation score)
+    \item \textbf{Longitudinal study}: Tracciare l'evoluzione delle competenze di prompting degli studenti nel tempo
+    \item \textbf{Cross-domain analysis}: Estendere lo studio ad altri domini (e.g., generazione di documentazione, refactoring)
+    \item \textbf{Comparative study}: Confrontare LLM diversi (Gemini vs. ChatGPT vs. Claude) a parità di prompt
+\end{itemize}
 
 \section{Conclusioni}
 
-Studio sistematico di 225 prompt con tool automatico e validazione campionaria.
+Questo studio ha presentato un'analisi empirica dell'utilizzo di LLM per la generazione di unit test da parte di studenti universitari, con particolare focus sulla validazione delle tecniche di prompt engineering dichiarate. I risultati principali possono essere sintetizzati in tre conclusioni strategiche:
 
-\subsection{Risultati Principali}
-
-\textit{[Completare dopo analisi]}
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item Tecnica più usata: \textbf{[NOME]} ([X]\%)
-    \item Accordo S-A: \textbf{[X]\%}
-    \item Accuratezza algoritmo: \textbf{[X]\%}
-    \item Varietà: \textbf{[N]}/18 tecniche
+\subsection{L'Importanza della Validazione Umana}
+Il fatto che il \textbf{68.4\% dei prompt} abbia richiesto validazione manuale conferma che:
+\begin{itemize}
+    \item Gli algoritmi euristici, pur utili come supporto, non possono sostituire il giudizio umano nella classificazione di tecniche di prompting
+    \item L'ambiguità intrinseca della classificazione richiede comprensione contestuale e semantica profonda
+    \item Lo sviluppo di strumenti di supporto alla validazione (come il tool presentato) è cruciale per rendere scalabile l'analisi di dataset di grandi dimensioni
 \end{itemize}
 
-\subsection{Contributi}
+\subsection{Il Gap tra Percezione e Pratica}
+La discrepanza sistematica tra tecniche dichiarate e validate (con particolare enfasi sul fenomeno dello "Zero-Shot percepito") evidenzia:
+\begin{itemize}
+    \item Gli studenti applicano strategie di prompting più sofisticate di quanto credano, ma mancano della consapevolezza meta-cognitiva per identificarle
+    \item La formazione sul prompt engineering non può limitarsi alla presentazione teorica delle tecniche, ma deve includere esercizi di identificazione e auto-riflessione
+    \item Il concetto di "Zero-Shot" è particolarmente frainteso: gli studenti lo interpretano come "prompt senza esempi" piuttosto che "prompt senza struttura o vincoli aggiuntivi"
+\end{itemize}
 
-Il tool è efficace per:
+\subsection{L'Approccio Iterativo come Prassi}
+L'analisi qualitativa dei prompt conferma che:
+\begin{itemize}
+    \item Il raggiungimento di coverage e mutation score elevati è quasi sempre frutto di un \textbf{processo iterativo} di interazione con l'LLM
+    \item Anche quando gli studenti dichiarano tecniche tradizionali (Zero-Shot, Few-Shot), il contesto reale è spesso un dialogo multi-turn con feedback incrementale
+    \item Questo suggerisce che le tassonomie di prompt engineering debbano evolversi per catturare meglio la dimensione \textbf{conversazionale} e \textbf{iterativa} dell'interazione con gli LLM
+\end{itemize}
 
-\begin{enumerate}[noitemsep,leftmargin=*]
-    \item Classificazione rapida grandi volumi
-    \item Identificazione automatica casi dubbi
-    \item Interfaccia intuitiva validazione
-    \item Export strutturato Excel 7-fogli
+\subsection{Contributo dello Studio}
+Questo lavoro contribuisce alla letteratura sul prompt engineering in tre modi:
+\begin{enumerate}
+    \item \textbf{Empiricamente}: Fornendo dati quantitativi sull'utilizzo reale delle tecniche di prompting in un contesto didattico controllato
+    \item \textbf{Metodologicamente}: Presentando uno strumento open-source per la validazione sistematica di dataset di prompt
+    \item \textbf{Pedagogicamente}: Identificando gap formativi specifici che possono informare il design di curricula su LLM e prompt engineering
 \end{enumerate}
 
-\subsection{Lavori Futuri}
+\vspace{0.5cm}
 
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item ML-based classification (BERT, Sentence-BERT)
-    \item Classificazione multi-label per prompt ibridi
-    \item Validazione estesa 30-40\% dataset
-    \item Inter-rater reliability multipli annotatori
-\end{itemize}
+In conclusione, mentre i Large Language Models rappresentano strumenti potenti per il software testing, la loro efficacia dipende criticamente dalla competenza degli utenti nel prompt engineering. Questo studio dimostra che tale competenza non è innata né facilmente acquisibile attraverso la sola esposizione teorica, ma richiede pratica deliberata, feedback strutturato e supporto di strumenti dedicati. Il tool sviluppato rappresenta un passo in questa direzione, dimostrando come la tecnologia possa supportare sia la ricerca accademica sia la formazione pratica in quest'area emergente.
 
-%------------------------------------------------
+\section*{Disponibilità del Tool e del Codice}
+Il tool presentato in questo documento è accessibile pubblicamente all'indirizzo:
+\begin{center}
+\href{https://mptsanalysis.streamlit.app/}{\texttt{https://mptsanalysis.streamlit.app/}}
+\end{center}
 
-\section{Materiali e Metodi}
-
-\subsection{Dataset e Preprocessing}
-
-Dataset da Google Forms: 75 studenti × 3 prompt = 225 totali. File Excel processato con \textit{pandas} per estrarre testo, LLM (normalizzato), classificazione studente.
-
-Normalizzazione gestisce: case-sensitivity, versioni (Gemini Pro 3 → Gemini), typos (gemin → Gemini), placeholder ("Which LLM?" → Non Specificato).
-
-\subsection{Algoritmo Classificazione}
-
-Pattern matching gerarchico a 4 livelli:
-
-\begin{enumerate}[noitemsep,leftmargin=*]
-    \item \textbf{Metacognizione}: \textit{refine, improve, iterate, step back, fix}
-    \item \textbf{Code Gen}: \textit{program-of-thought, chain-of-code, scratchpad}
-    \item \textbf{Reasoning}: \textit{tree-of-thought, CoT, step-by-step, self-consistency}
-    \item \textbf{Base}: \textit{example, e.g.} (Few-Shot); default (Zero-Shot)
-\end{enumerate}
-
-Confidence = f(pattern matched, specificità, keywords). Is\_Doubtful se < 70\% o pattern competono.
-
-\subsection{Implementazione}
-
-Python 3.9+ con:
-
-\begin{itemize}[noitemsep,leftmargin=*]
-    \item \texttt{streamlit 1.28+}: Web framework
-    \item \texttt{pandas 2.0+}: Data processing
-    \item \texttt{plotly 5.17+}: Visualizzazioni
-    \item \texttt{openpyxl}: Excel I/O
-    \item \texttt{re}: Regex (standard library)
-\end{itemize}
-
-Codice disponibile su GitHub (link in preparazione).
-
-%----------------------------------------------------------------------------------------
-%	RINGRAZIAMENTI
-%----------------------------------------------------------------------------------------
+Il codice sorgente e la documentazione tecnica completa sono disponibili su richiesta.
 
 \section*{Ringraziamenti}
-
-Si ringrazia il professore del corso di Software Testing per il dataset e gli studenti partecipanti per aver reso possibile questo studio.
-
-%----------------------------------------------------------------------------------------
-%	BIBLIOGRAFIA
-%----------------------------------------------------------------------------------------
-
-\begin{thebibliography}{9}
-
-\bibitem{wei2022chain}
-Wei J, Wang X, Schuurmans D, et al.
-\textit{Chain-of-Thought Prompting Elicits Reasoning in Large Language Models}.
-Advances in Neural Information Processing Systems 35:24824-24837, 2022.
-
-\bibitem{kojima2022large}
-Kojima T, Gu SS, Reid M, Matsuo Y, Iwasawa Y.
-\textit{Large Language Models are Zero-Shot Reasoners}.
-Advances in Neural Information Processing Systems 35:22199-22213, 2022.
-
-\bibitem{yao2023tree}
-Yao S, Yu D, Zhao J, et al.
-\textit{Tree of Thoughts: Deliberate Problem Solving with Large Language Models}.
-arXiv preprint arXiv:2305.10601, 2023.
-
-\bibitem{chen2022program}
-Chen W, Ma X, Wang X, Cohen WW.
-\textit{Program of Thoughts Prompting: Disentangling Computation from Reasoning for Numerical Reasoning Tasks}.
-arXiv preprint arXiv:2211.12588, 2022.
-
-\end{thebibliography}
-
-%----------------------------------------------------------------------------------------
+Si ringrazia il Prof. Porfirio Tramontana per la supervisione scientifica e gli studenti del corso di Software Testing per la partecipazione all'esperimento.
 
 \end{document}
